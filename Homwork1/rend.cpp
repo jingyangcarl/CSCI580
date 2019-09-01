@@ -86,11 +86,12 @@ int GzRender::GzFlushDisplay2File(FILE* outfile)
 /* HW1.6 write image to ppm file -- "P6 %d %d 255\r" */
 	std::stringstream ss;
 	ss << "P6 " << std::to_string(xres) << " " << std::to_string(yres) << " 255\r";
-	for (int i = 0; i < xres; i++) {
-		for (int j = 0; j < yres; j++) {
-			ss << char(pixelbuffer[i * xres + j].red >> 4);
-			ss << char(pixelbuffer[i * xres + j].green >> 4);
-			ss << char(pixelbuffer[i * xres + j].blue >> 4);
+
+	for (int j = 0; j < yres; j++) {
+		for (int i = 0; i < xres; i++) {
+			ss << char(pixelbuffer[j * xres + i].red >> 4);
+			ss << char(pixelbuffer[j * xres + i].green >> 4);
+			ss << char(pixelbuffer[j * xres + i].blue >> 4);
 		}
 	}
 	fwrite(ss.str().data(), ss.str().size(), 1, outfile);
