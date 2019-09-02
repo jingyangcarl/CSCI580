@@ -29,8 +29,10 @@ GzRender::GzRender(int xRes, int yRes)
 GzRender::~GzRender()
 {
 /* HW1.2 clean up, free buffer memory */
-	delete this->framebuffer;
-	delete this->pixelbuffer;
+	// The delete operator deallocates memory and calls the destructor for a single object created with new.
+	// The delete[] operator deallocates memory and calls destructors for an array objects created with new[].
+	delete[] this->framebuffer;
+	delete[] this->pixelbuffer;
 }
 
 int GzRender::GzDefault()
