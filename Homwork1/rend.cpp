@@ -94,7 +94,12 @@ int GzRender::GzFlushDisplay2File(FILE* outfile)
 			ss << char(pixelbuffer[j * xres + i].blue >> 4);
 		}
 	}
-	fwrite(ss.str().data(), ss.str().size(), 1, outfile);
+
+	// write to file
+	size_t count = 1;
+	if (fwrite(ss.str().data(), ss.str().size(), count, outfile) == count) {
+		return GZ_FAILURE;
+	}
 	return GZ_SUCCESS;
 }
 
