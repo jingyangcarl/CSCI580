@@ -4,12 +4,12 @@ Homework 1
 ## Author
 > Student Name: Jing Yang
 >
-> Student ID: 1962196781
+> Student ID: 1692196781
 >
 > Student Email: jyang010@usc.edu
 
 ## Solution Introduction:
-This solution is used to render a 2D image consists of several rectangulars with different properties. The pixel buffer and frame buffer are introduced in the solution, which are used to render the image.
+This solution is to render a 2D image consists of several rectangulars with different properties. The pixel buffer and frame buffer are introduced in the solution, which are used to render the image.
 
 ## Solution Environment:
 * Windows 10
