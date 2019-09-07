@@ -128,6 +128,10 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 -- Set renderer attribute states (e.g.: GZ_RGB_COLOR default color)
 -- In later homeworks set shaders, interpolaters, texture maps, and lights
 */
+	GzColor* color = (GzColor*)(valueList[0]);
+	this->flatcolor[0] = (*color)[0];
+	this->flatcolor[1] = (*color)[1];
+	this->flatcolor[2] = (*color)[2];
 
 	return GZ_SUCCESS;
 }
