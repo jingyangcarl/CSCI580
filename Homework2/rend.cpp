@@ -129,11 +129,21 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 -- In later homeworks set shaders, interpolaters, texture maps, and lights
 */
 	GzColor* color = (GzColor*)(valueList[0]);
-	this->flatcolor[0] = (*color)[0];
-	this->flatcolor[1] = (*color)[1];
-	this->flatcolor[2] = (*color)[2];
 
-	return GZ_SUCCESS;
+	switch (nameList[0]) {
+	case GZ_RGB_COLOR: 
+
+		this->flatcolor[0] = (*color)[0];
+		this->flatcolor[1] = (*color)[1];
+		this->flatcolor[2] = (*color)[2];
+
+		return GZ_SUCCESS;
+		break;
+	default:
+		return GZ_FAILURE;
+		break;
+	}
+
 }
 
 int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueList) 
@@ -147,6 +157,18 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 -- Return error code
 */
 
-	return GZ_SUCCESS;
+	GzCoord* coord = (GzCoord*)(valueList[0]);
+	GzCoord tri1 = { coord[0][0], coord[0][1], coord[0][2] };
+	GzCoord tri2 = { coord[1][0], coord[1][1], coord[1][2] };
+	GzCoord tri3 = { coord[2][0], coord[2][1], coord[2][2] };
+
+	switch (nameList[0]) {
+	case GZ_NULL_TOKEN:
+		break;
+	case GZ_POSITION:
+
+		return GZ_SUCCESS;
+		break;
+	}
 }
 
