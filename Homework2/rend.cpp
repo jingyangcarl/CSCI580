@@ -215,21 +215,6 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 			}
 		}
 
-		//pixelbuffer[3].red = verTop[0];
-		//pixelbuffer[3].green = verTop[1];
-		//pixelbuffer[3].blue = verTop[2];
-		//pixelbuffer[4].red = verMid[0];
-		//pixelbuffer[4].green = verMid[1];
-		//pixelbuffer[4].blue = verMid[2];
-		//pixelbuffer[5].red = verBot[0];
-		//pixelbuffer[5].green = verBot[1];
-		//pixelbuffer[5].blue = verBot[2];
-		//if (verTop[1] >= verMid[1] && verMid[1] >= verBot[1]) {
-		//	pixelbuffer[6].red = 123;
-		//	pixelbuffer[6].green = 123;
-		//	pixelbuffer[6].blue = 123;
-		//}
-
 		// setup edge DDAs for top-mid, mid-bot, top-bot
 		typedef struct DigitalDifferentialAnalyzer {
 			GzCoord start;
@@ -244,9 +229,6 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				this->slopeX = (end[0] - start[0]) / (end[1] - start[1]);
 				this->slopeZ = (end[2] - start[2]) / (end[1] - start[1]);
 			}
-			float moveYforX(float deltaY) {
-				return start[0] + slopeX * deltaY;
-			}
 		} DDA;
 		DDA ddaTopMid(verTop, verMid);
 		DDA ddaMidBot(verMid, verBot);
@@ -254,12 +236,21 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 
 		// find L/R relationship to determine clockwise edges
 		// clockwise edges could be either top-bot-mid or top-mid-bot
-		if ()
+		float deltaY = verMid[1] - verTop[1];
+		float deltaX = ddaTopBot.slopeX * deltaY;
 
+		if (verTop[0] + deltaX < verMid[0]) {
+			// vermid is on the right
+		}
+		else if (verTop[0] + deltaX > verMid[0]) {
+			// vermid is on the left
 
-		// LEE
+		}
+		else {
+			// vermid is on the line goes through verTop and verDown
 
-		
+		}
+
 		return GZ_SUCCESS;
 		break;
 	}
