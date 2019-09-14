@@ -249,6 +249,9 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 		DDA ddaMidBot(verMid, verBot);
 		DDA ddaTopBot(verTop, verBot);
 
+
+		this->test = ddaTopBot.slopeX;
+
 		// find L/R relationship to determine clockwise edges
 		// clockwise edges could be either top-bot-mid or top-mid-bot
 
