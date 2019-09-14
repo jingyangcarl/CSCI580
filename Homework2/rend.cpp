@@ -244,6 +244,9 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				this->slopeX = (end[0] - start[0]) / (end[1] - start[1]);
 				this->slopeZ = (end[2] - start[2]) / (end[1] - start[1]);
 			}
+			float moveYforX(float deltaY) {
+				return start[0] + slopeX * deltaY;
+			}
 		} DDA;
 		DDA ddaTopMid(verTop, verMid);
 		DDA ddaMidBot(verMid, verBot);
@@ -251,6 +254,8 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 
 		// find L/R relationship to determine clockwise edges
 		// clockwise edges could be either top-bot-mid or top-mid-bot
+		if ()
+
 
 		// LEE
 
