@@ -222,6 +222,15 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 			GzCoord current;
 			float slopeX;
 			float slopeZ;
+
+			DigitalDifferentialAnalyzer() {
+				this->start[0] = 0.0f; this->start[1] = 0.0f; this->start[1] = 0.0f;
+				this->end[0] = 0.0f; this->end[1] = 0.0f; this->end[1] = 0.0f;
+				this->current[0] = start[0]; this->current[1] = start[1]; this->current[1] = start[1];
+				this->slopeX = 0.0f;
+				this->slopeZ = 0.0f;
+			}
+
 			DigitalDifferentialAnalyzer(GzCoord &start, GzCoord &end) {
 				this->start[0] = start[0]; this->start[1] = start[1]; this->start[1] = start[1];
 				this->end[0] = end[0]; this->end[1] = end[1]; this->end[1] = end[1];
@@ -229,22 +238,182 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				this->slopeX = (end[0] - start[0]) / (end[1] - start[1]);
 				this->slopeZ = (end[2] - start[2]) / (end[1] - start[1]);
 			}
+
+			/*
+			Description:
+			This function is used to move current point, defined as a member variable, along the edge from the start point to the end point by deltaY;
+			Input:
+			@ float deltaY: a moving distance along y axis;
+			Output:
+			@ void returnValue: void;
+			*/
+			void MoveY(float deltaY) {
+				this->current[0] += slopeX * deltaY;
+				this->current[1] += deltaY;
+				this->current[2] += slopeZ * deltaY;
+			}
+
+			/*
+			Description:
+			This function is used to move the current point back to the start point;
+			Input:
+			@ void parameter: void;
+			Output:
+			@ void returnValue: void;
+			*/
+			void Reset() {
+				this->current[0] = this->start[0];
+				this->current[1] = this->start[1];
+				this->current[2] = this->start[2];
+			}
+
 		} DDA;
-		DDA ddaTopMid(verTop, verMid);
-		DDA ddaMidBot(verMid, verBot);
 		DDA ddaTopBot(verTop, verBot);
 
 		// find L/R relationship to determine clockwise edges
 		// clockwise edges could be either top-bot-mid or top-mid-bot
+		typedef struct DigitalDifferentialPixelDrawer {
+			DDA shortEdge;
+			DDA longEdge;
+
+			DigitalDifferentialPixelDrawer(DDA shortEdge, DDA longEdge) {
+				this->shortEdge = shortEdge;
+				this->longEdge = longEdge;
+			}
+
+		} DDPixelDrawer;
+
+
 		float deltaY = verMid[1] - verTop[1];
 		float deltaX = ddaTopBot.slopeX * deltaY;
 
 		if (verTop[0] + deltaX < verMid[0]) {
 			// vermid is on the right
+
+			// initialize DDAs for top-bot edge and top-mid edge
+			DDA ddaTopBot(verTop, verBot);
+			DDA ddaTopMid(verTop, verMid);
+
+			// move current points to pixel line
+			ddaTopMid.MoveY(floorf(ddaTopMid.start[1]) - ddaTopMid.start[1]);
+			ddaTopBot.MoveY(floorf(ddaTopBot.start[1]) - ddaTopBot.start[1]);
+
+			// from the start line to the end line (along y)
+			for (int j = ddaTopMid.current[1]; j > ceil(ddaTopMid.end[1]); j--) {
+
+				if (j < 0 || j > yres) continue;
+
+				// from the start pixel to the end pixel (along x)
+				for (int i = ceil(ddaTopMid.current[0]); i >= ddaTopBot.current[0]; i--) {
+
+					if (i < 0 || i > xres) continue;
+
+					// add color
+					pixelbuffer[ARRAY(i, j)].red = flatcolor[0] * 4096;
+					pixelbuffer[ARRAY(i, j)].green = flatcolor[1] * 4096;
+					pixelbuffer[ARRAY(i, j)].blue = flatcolor[2] * 4096;
+					pixelbuffer[ARRAY(i, j)].alpha = 0 * 4096;
+				}
+
+				// move the current points to the next pixel line (scan line by scan line)
+				ddaTopMid.MoveY(-1);
+				ddaTopBot.MoveY(-1);
+			}
+
+			// initialize DDAs for top-bot edge and mid-bot edge
+			ddaTopBot.Reset();
+			DDA ddaMidBot(verMid, verBot);
+
+			// move current points to pixel line
+			ddaMidBot.MoveY(floorf(ddaMidBot.start[1]) - ddaMidBot.start[1]);
+			ddaTopBot.MoveY(floorf(ddaTopBot.start[1]) - ddaTopBot.start[1]);
+
+			// from the start line to the end line (along y)
+			for (int j = ddaMidBot.current[1]; j > ceil(ddaMidBot.end[1]); j--) {
+
+				if (j < 0 || j > yres) continue;
+
+				// from the start pixel to the end pixel (along x)
+				for (int i = ceil(ddaMidBot.current[0]); i >= ddaTopBot.current[0]; i--) {
+
+					if (i < 0 || i > xres) continue;
+
+					// add color
+					pixelbuffer[ARRAY(i, j)].red = flatcolor[0] * 4096;
+					pixelbuffer[ARRAY(i, j)].green = flatcolor[1] * 4096;
+					pixelbuffer[ARRAY(i, j)].blue = flatcolor[2] * 4096;
+					pixelbuffer[ARRAY(i, j)].alpha = 0 * 4096;
+				}
+
+				// move the current points to the next pixel line (scan line by scan line)
+				ddaMidBot.MoveY(-1);
+				ddaTopBot.MoveY(-1);
+			}
+
 		}
 		else if (verTop[0] + deltaX > verMid[0]) {
 			// vermid is on the left
 
+			// initialize DDAs for top-bot edge and top-mid edge
+			DDA ddaTopBot(verTop, verBot);
+			DDA ddaTopMid(verTop, verMid);
+
+			// move current points to pixel line
+			ddaTopMid.MoveY(floorf(ddaTopMid.start[1]) - ddaTopMid.start[1]);
+			ddaTopBot.MoveY(floorf(ddaTopBot.start[1]) - ddaTopBot.start[1]);
+
+			// from the start line to the end line (along y)
+			for (int j = ddaTopMid.current[1]; j > ceil(ddaTopMid.end[1]); j--) {
+
+				if (j < 0 || j > yres) continue;
+
+				// from the start pixel to the end pixel (along x)
+				for (int i = ceil(ddaTopMid.current[0]); i <= ddaTopBot.current[0]; i++) {
+
+					if (i < 0 || i > xres) continue;
+
+					// add color
+					pixelbuffer[ARRAY(i, j)].red = flatcolor[0] * 4096;
+					pixelbuffer[ARRAY(i, j)].green = flatcolor[1] * 4096;
+					pixelbuffer[ARRAY(i, j)].blue = flatcolor[2] * 4096;
+					pixelbuffer[ARRAY(i, j)].alpha = 0 * 4096;
+				}
+
+				// move the current points to the next pixel line (scan line by scan line)
+				ddaTopMid.MoveY(-1);
+				ddaTopBot.MoveY(-1);
+			}
+
+			// initialize DDAs for top-bot edge and mid-bot edge
+			ddaTopBot.Reset();
+			DDA ddaMidBot(verMid, verBot);
+
+			// move current points to pixel line
+			ddaMidBot.MoveY(floorf(ddaMidBot.start[1]) - ddaMidBot.start[1]);
+			ddaTopBot.MoveY(floorf(ddaTopBot.start[1]) - ddaTopBot.start[1]);
+
+			// from the start line to the end line (along y)
+			for (int j = ddaMidBot.current[1]; j > ceil(ddaMidBot.end[1]); j--) {
+
+				if (j < 0 || j > yres) continue;
+
+				// from the start pixel to the end pixel (along x)
+				for (int i = ceil(ddaMidBot.current[0]); i <= ddaTopBot.current[0]; i++) {
+
+					if (i < 0 || i > xres) continue;
+
+					// add color
+					pixelbuffer[ARRAY(i, j)].red = flatcolor[0] * 4096;
+					pixelbuffer[ARRAY(i, j)].green = flatcolor[1] * 4096;
+					pixelbuffer[ARRAY(i, j)].blue = flatcolor[2] * 4096;
+					pixelbuffer[ARRAY(i, j)].alpha = 0 * 4096;
+				}
+
+				// move the current points to the next pixel line (scan line by scan line)
+				ddaMidBot.MoveY(-1);
+				ddaTopBot.MoveY(-1);
+			}
+			
 		}
 		else {
 			// vermid is on the line goes through verTop and verDown
