@@ -218,20 +218,18 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 		DDA ddaMidBot(verMid, verBot, true);
 
 		// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
-		float x = ddaTopBot.MoveY(verMid[1] - verTop[1])[0];
+		float xShortEdge = verMid[0];
+		float xLongEdge = ddaTopBot.MoveY(verMid[1] - verTop[1])[0];
 
 		// move current point of the long edge back for rendering
 		ddaTopBot.MoveReset();
 		ddaTopBot.MoveToNearestPixelLocation();
 
 		// if x < verMid[0], the short edge is on the left, or its on the left;
-		Render(ddaTopMid, ddaTopBot, x < verMid[0] ? true : x > verMid[0] ? false : false);
-		Render(ddaMidBot, ddaTopBot, x < verMid[0] ? true : x > verMid[0] ? false : false);
+		Render(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
+		Render(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
 
 		return GZ_SUCCESS;
-		break;
-	default:
-		return GZ_FAILURE;
 		break;
 	}
 }
