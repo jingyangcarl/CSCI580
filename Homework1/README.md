@@ -8,6 +8,9 @@ Homework 1
 >
 > Student Email: jyang010@usc.edu
 
+## Solution Results:
+![Solution Results](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%201/output.gif)
+
 ## Solution Introduction:
 This solution is to render a 2D image consists of several rectangulars with different properties. The pixel buffer and frame buffer are introduced in the solution, which are used to render the image.
 
@@ -66,7 +69,7 @@ This solution is to render a 2D image consists of several rectangulars with diff
 >>
 >> MainFrm.cpp
 >>
->> rend.cpp
+>> rend.cpp: implements rend.h;
 >>
 >> StdAfx.cpp
 >>
