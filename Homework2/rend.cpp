@@ -4,7 +4,7 @@
 #include	"Gz.h"
 #include	"rend.h"
 #include	"rendVertexSorter.h"
-//#include	"rendDigitalDifferentialAnalyzer.h"
+#include	"rendDigitalDifferentialAnalyzer.h"
 
 /***********************************************/
 /* HW1 methods: copy here the methods from HW1 */
@@ -170,158 +170,68 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 		GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
 		GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
 
-		// setup edge DDAs for top-mid, mid-bot, top-bot
-		typedef struct DigitalDifferentialAnalyzer {
-			GzCoord start;
-			GzCoord end;
-			GzCoord current;
-			float slopeX;
-			float slopeZ;
-
-			DigitalDifferentialAnalyzer() {
-				this->start[0] = 0.0f; this->start[1] = 0.0f; this->start[2] = 0.0f;
-				this->end[0] = 0.0f; this->end[1] = 0.0f; this->end[2] = 0.0f;
-				this->current[0] = start[0]; this->current[1] = start[1]; this->current[2] = start[2];
-				this->slopeX = 0.0f;
-				this->slopeZ = 0.0f;
-			}
-
-			DigitalDifferentialAnalyzer(GzCoord &start, GzCoord &end, bool initToScanLine) {
-				this->start[0] = start[0]; this->start[1] = start[1]; this->start[2] = start[2];
-				this->end[0] = end[0]; this->end[1] = end[1]; this->end[2] = end[2];
-				this->current[0] = start[0]; this->current[1] = start[1]; this->current[2] = start[2];
-				this->slopeX = (end[0] - start[0]) / (end[1] - start[1]);
-				this->slopeZ = (end[2] - start[2]) / (end[1] - start[1]);
-				if (initToScanLine) {
-					// move current points to nearest pixel scan line
-					MoveY(floor(start[1]) - start[1]);
-				}
-			}
-
-			/*
-			Description:
-			This function is used to move current point, defined as a member variable, along the edge from the start point to the end point by deltaY;
-			Input:
-			@ float deltaY: a moving distance along y axis;
-			Output:
-			@ void returnValue: void;
-			*/
-			void MoveY(float deltaY) {
-				this->current[0] += slopeX * deltaY;
-				this->current[1] += deltaY;
-				this->current[2] += slopeZ * deltaY;
-			}
-
-
-		} DDA;
-
-		// find L/R relationship to determine clockwise edges
-		// clockwise edges could be either top-bot-mid or top-mid-bot
-		DDA ddaTopBot(verTop, verBot, false);
-		ddaTopBot.MoveY(verMid[1] - verTop[1]);
-
+		/*
+		Description:
+		This function is a lambda function defined to render pixels scan line by scan line from the short edge side to long edge side of a triangle by a top-down order;
+		Input:
+		@ DDA& shortEdge: the shorter edge of a triangle;
+		@ DDA& longEdge: the longest edge of a triangle;
+		@ bool isShortEdgeOnRight: if the short edge is on the right of long edge;
+		Output:
+		@ auto returnValue: a auto returnValue;
+		*/
 		auto Render = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
 			// from the start line to the end line (along y)
-			for (int j = shortEdge.current[1]; j >= ceil(shortEdge.end[1]); j--) {
+			for (int j = shortEdge.getCurrent()[1]; j >= ceil(shortEdge.getEnd()[1]); j--) {
 				if (j < 0 || j > this->yres) continue;
 				// from the start pixel to the end pixel (along x)
 				if (isShortEdgeOnRight) {
-
+					// short edge is on the right of the long edge
+					for (int i = floor(shortEdge.getCurrent()[0]); i >= longEdge.getCurrent()[0]; i--) {
+						float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
+						float deltaX = i - shortEdge.getCurrent()[0];
+						float z = slopeZ * deltaX + shortEdge.getCurrent()[2];
+						GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
+					}
 				}
 				else {
-
+					// short edge is on the left of the long edge
+					for (int i = ceil(shortEdge.getCurrent()[0]); i <= longEdge.getCurrent()[0]; i++) {
+						float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
+						float deltaX = i - shortEdge.getCurrent()[0];
+						float z = slopeZ * deltaX + shortEdge.getCurrent()[2];
+						GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
+					}
 				}
+				// move the current points to the next pixel line (scan line by scan line)
+				shortEdge.MoveDownward();
+				longEdge.MoveDownward();
 			}
+			return GZ_SUCCESS;
 		};
 
-		if (ddaTopBot.current[0] < verMid[0]) {
-			// vermid is on the right
+		// find L/R relationship to determine clockwise edges
+		// clockwise edges could be either top-bot-mid or top-mid-bot
+		// initialize DDAs for top-bot edge and top-mid edge
+		DDA ddaTopBot(verTop, verBot, false);
+		DDA ddaTopMid(verTop, verMid, true);
+		DDA ddaMidBot(verMid, verBot, true);
 
-			// initialize DDAs for top-bot edge and top-mid edge
-			DDA ddaTopBot(verTop, verBot, true);
-			DDA ddaTopMid(verTop, verMid, true);
-			DDA ddaMidBot(verMid, verBot, true);
+		// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
+		float x = ddaTopBot.MoveY(verMid[1] - verTop[1])[0];
 
-			// from the start line to the end line (along y)
-			for (int j = ddaTopMid.current[1]; j >= ceil(ddaTopMid.end[1]); j--) {
+		// move current point of the long edge back for rendering
+		ddaTopBot.MoveReset();
+		ddaTopBot.MoveToNearestPixelLocation();
 
-				if (j < 0 || j > yres) continue;
-
-				// from the start pixel to the end pixel (along x)
-				for (int i = floor(ddaTopMid.current[0]); i >= ddaTopBot.current[0]; i--) {
-					float z = (ddaTopMid.current[2] - ddaTopBot.current[2]) / (ddaTopMid.current[0] - ddaTopBot.current[0]) * (i - ddaTopMid.current[0]) + ddaTopMid.current[2];
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
-				}
-
-				// move the current points to the next pixel line (scan line by scan line)
-				ddaTopMid.MoveY(-1);
-				ddaTopBot.MoveY(-1);
-			}
-
-			// from the start line to the end line (along y)
-			for (int j = ddaMidBot.current[1]; j >= ceil(ddaMidBot.end[1]); j--) {
-
-				if (j < 0 || j > yres) continue;
-
-				// from the start pixel to the end pixel (along x)
-				for (int i = floor(ddaMidBot.current[0]); i >= ddaTopBot.current[0]; i--) {
-					float z = (ddaMidBot.current[2] - ddaTopBot.current[2]) / (ddaMidBot.current[0] - ddaTopBot.current[0]) * (i - ddaMidBot.current[0]) + ddaMidBot.current[2];
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
-				}
-
-				// move the current points to the next pixel line (scan line by scan line)
-				ddaMidBot.MoveY(-1);
-				ddaTopBot.MoveY(-1);
-			}
-
-		}
-		else if (ddaTopBot.current[0] > verMid[0]) {
-			// vermid is on the left
-
-			// initialize DDAs for top-bot edge and top-mid edge
-			DDA ddaTopBot(verTop, verBot, true);
-			DDA ddaTopMid(verTop, verMid, true);
-			DDA ddaMidBot(verMid, verBot, true);
-
-			// from the start line to the end line (along y)
-			for (int j = ddaTopMid.current[1]; j >= ceil(ddaTopMid.end[1]); j--) {
-
-				if (j < 0 || j > yres) continue;
-
-				// from the start pixel to the end pixel (along x)
-				for (int i = ceil(ddaTopMid.current[0]); i <= ddaTopBot.current[0]; i++) {
-					float z = (ddaTopMid.current[2] - ddaTopBot.current[2]) / (ddaTopMid.current[0] - ddaTopBot.current[0]) * (i - ddaTopMid.current[0]) + ddaTopMid.current[2];
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
-				}
-
-				// move the current points to the next pixel line (scan line by scan line)
-				ddaTopMid.MoveY(-1);
-				ddaTopBot.MoveY(-1);
-			}
-
-			// from the start line to the end line (along y)
-			for (int j = ddaMidBot.current[1]; j >= ceil(ddaMidBot.end[1]); j--) {
-
-				if (j < 0 || j > yres) continue;
-
-				// from the start pixel to the end pixel (along x)
-				for (int i = ceil(ddaMidBot.current[0]); i <= ddaTopBot.current[0]; i++) {
-					float z = (ddaMidBot.current[2] - ddaTopBot.current[2]) / (ddaMidBot.current[0] - ddaTopBot.current[0]) * (i - ddaMidBot.current[0]) + ddaMidBot.current[2];
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
-				}
-
-				// move the current points to the next pixel line (scan line by scan line)
-				ddaMidBot.MoveY(-1);
-				ddaTopBot.MoveY(-1);
-			}
-			
-		}
-		else {
-			// vermid is on the line goes through verTop and verDown
-
-		}
+		// if x < verMid[0], the short edge is on the left, or its on the left;
+		Render(ddaTopMid, ddaTopBot, x < verMid[0] ? true : x > verMid[0] ? false : false);
+		Render(ddaMidBot, ddaTopBot, x < verMid[0] ? true : x > verMid[0] ? false : false);
 
 		return GZ_SUCCESS;
+		break;
+	default:
+		return GZ_FAILURE;
 		break;
 	}
 }

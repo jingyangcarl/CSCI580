@@ -13,6 +13,14 @@ VertexSorter::VertexSorter(GzCoord& ver0, GzCoord& ver1, GzCoord& ver2) {
 	this->verMid[0] = 0.0; this->verMid[1] = 0.0f; this->verMid[2] = 0.0;
 }
 
+/*
+Description:
+This function is used to sort ver0, ver1, ver2 and save the sorted value to verTop, verMid, and verBot;
+Input:
+@ void parameter: void;
+Output:
+@ void returnValue: void;
+*/
 void VertexSorter::Sort() {
 
 	if (ver0[1] > ver1[1] && ver0[1] > ver2[1]) {
@@ -59,14 +67,38 @@ void VertexSorter::Sort() {
 	}
 }
 
+/*
+Description:
+This funciton is used to get the top vertex;
+Input:
+@ void parameter: void;
+Output:
+@ float* returnValue: the top vertex;
+*/
 float* VertexSorter::getVerTop() {
 	return this->verTop;
 }
 
+/*
+Description:
+This funciton is used to get the middle vertex;
+Input:
+@ void parameter: void;
+Output:
+@ float* returnValue: the middle vertex;
+*/
 float* VertexSorter::getVerMid() {
 	return this->verMid;
 }
 
+/*
+Description:
+This funciton is used to get the bottom vertex;
+Input:
+@ void parameter: void;
+Output:
+@ float* returnValue: the bottom vertex;
+*/
 float* VertexSorter::getVerBot() {
 	return this->verBot;
 }

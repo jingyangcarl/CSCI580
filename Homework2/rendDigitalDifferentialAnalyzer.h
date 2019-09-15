@@ -5,7 +5,11 @@ class DigitalDifferentialAnalyzer {
 public:
 	DigitalDifferentialAnalyzer();
 	DigitalDifferentialAnalyzer(GzCoord& start, GzCoord& end, bool initToScanLine);
-	void MoveY(float deltaY);
+
+	float* MoveY(float deltaY);
+	float* MoveDownward();
+	float* MoveToNearestPixelLocation();
+	void MoveReset();
 
 	float* getStart();
 	float* getEnd();
