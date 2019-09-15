@@ -190,7 +190,7 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 					for (int i = floor(shortEdge.getCurrent()[0]); i >= longEdge.getCurrent()[0]; i--) {
 						float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
 						float deltaX = i - shortEdge.getCurrent()[0];
-						float z = slopeZ * deltaX + shortEdge.getCurrent()[2];
+						GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
 						GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 					}
 				}
@@ -199,7 +199,7 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 					for (int i = ceil(shortEdge.getCurrent()[0]); i <= longEdge.getCurrent()[0]; i++) {
 						float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
 						float deltaX = i - shortEdge.getCurrent()[0];
-						float z = slopeZ * deltaX + shortEdge.getCurrent()[2];
+						GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
 						GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 					}
 				}
