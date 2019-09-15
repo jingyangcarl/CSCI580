@@ -138,6 +138,8 @@
     <ClCompile Include="CS580HWView.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="rend.cpp" />
+    <ClCompile Include="rendDigitalDifferentialAnalyzer.cpp" />
+    <ClCompile Include="rendVertexSorter.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdafx.h</PrecompiledHeaderFile>
@@ -157,6 +159,8 @@
     <ClInclude Include="gz.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="rend.h" />
+    <ClInclude Include="rendDigitalDifferentialAnalyzer.h" />
+    <ClInclude Include="rendVertexSorter.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StdAfx.h" />
   </ItemGroup>

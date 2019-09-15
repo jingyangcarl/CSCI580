@@ -39,6 +39,12 @@
     <ClCompile Include="StdAfx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="rendVertexSorter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rendDigitalDifferentialAnalyzer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CS580HW.rc">
@@ -74,6 +80,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StdAfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rendVertexSorter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rendDigitalDifferentialAnalyzer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

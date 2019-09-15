@@ -3,6 +3,8 @@
 #include	"math.h"
 #include	"Gz.h"
 #include	"rend.h"
+#include	"rendVertexSorter.h"
+//#include	"rendDigitalDifferentialAnalyzer.h"
 
 /***********************************************/
 /* HW1 methods: copy here the methods from HW1 */
@@ -31,11 +33,11 @@ int GzRender::GzDefault() {
 /* HW1.3 set pixel buffer to some default values - start a new frame */
 	for (int i = 0; i < xres; i++) {
 		for (int j = 0; j < yres; j++) {
-			pixelbuffer[j * xres + i].red = 4095;
-			pixelbuffer[j * xres + i].green = 4095;
-			pixelbuffer[j * xres + i].blue = 4095;
-			pixelbuffer[j * xres + i].alpha = 1;
-			pixelbuffer[j * xres + i].z = MAXINT;
+			pixelbuffer[ARRAY(i, j)].red = 4095;
+			pixelbuffer[ARRAY(i, j)].green = 4095;
+			pixelbuffer[ARRAY(i, j)].blue = 4095;
+			pixelbuffer[ARRAY(i, j)].alpha = 1;
+			pixelbuffer[ARRAY(i, j)].z = MAXINT32;
 		}
 	}
 	return GZ_SUCCESS;
@@ -45,11 +47,13 @@ int GzRender::GzDefault() {
 int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z) {
 /* HW1.4 write pixel values into the buffer */
 	if (i >= 0 && i < xres && j >= 0 && j < yres) {
-		pixelbuffer[j * xres + i].red = r < 4095 ? r : 4095;
-		pixelbuffer[j * xres + i].green = g < 4095 ? g : 4095;
-		pixelbuffer[j * xres + i].blue = b < 4095 ? b : 4095;
-		pixelbuffer[j * xres + i].alpha = a;
-		pixelbuffer[j * xres + i].z = z;
+		if (z <= pixelbuffer[ARRAY(i, j)].z) {
+			pixelbuffer[ARRAY(i, j)].red = r < 4095 ? r : 4095;
+			pixelbuffer[ARRAY(i, j)].green = g < 4095 ? g : 4095;
+			pixelbuffer[ARRAY(i, j)].blue = b < 4095 ? b : 4095;
+			pixelbuffer[ARRAY(i, j)].alpha = a;
+			pixelbuffer[ARRAY(i, j)].z = z;
+		}
 	}
 	else {
 		GZ_FAILURE;
@@ -61,11 +65,11 @@ int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, G
 int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth *z) {
 /* HW1.5 retrieve a pixel information from the pixel buffer */
 	if (i >= 0 && i < xres && j >= 0 && j < yres) {
-		*r = pixelbuffer[j * xres + i].red;
-		*g = pixelbuffer[j * xres + i].green;
-		*b = pixelbuffer[j * xres + i].blue;
-		*a = pixelbuffer[j * xres + i].alpha;
-		*z = pixelbuffer[j * xres + i].z;
+		*r = pixelbuffer[ARRAY(i, j)].red;
+		*g = pixelbuffer[ARRAY(i, j)].green;
+		*b = pixelbuffer[ARRAY(i, j)].blue;
+		*a = pixelbuffer[ARRAY(i, j)].alpha;
+		*z = pixelbuffer[ARRAY(i, j)].z;
 	}
 	else {
 
@@ -81,9 +85,9 @@ int GzRender::GzFlushDisplay2File(FILE* outfile) {
 
 	for (int j = 0; j < yres; j++) {
 		for (int i = 0; i < xres; i++) {
-			ss << char(pixelbuffer[j * xres + i].red >> 4);
-			ss << char(pixelbuffer[j * xres + i].green >> 4);
-			ss << char(pixelbuffer[j * xres + i].blue >> 4);
+			ss << char(pixelbuffer[ARRAY(i, j)].red >> 4);
+			ss << char(pixelbuffer[ARRAY(i, j)].green >> 4);
+			ss << char(pixelbuffer[ARRAY(i, j)].blue >> 4);
 		}
 	}
 
@@ -103,9 +107,9 @@ int GzRender::GzFlushDisplay2FrameBuffer() {
 */
 	for (int i = 0; i < xres; i++) {
 		for (int j = 0; j < yres; j++) {
-			framebuffer[3 * (j * xres + i) + 0] = char(pixelbuffer[j * xres + i].blue >> 4);
-			framebuffer[3 * (j * xres + i) + 1] = char(pixelbuffer[j * xres + i].green >> 4);
-			framebuffer[3 * (j * xres + i) + 2] = char(pixelbuffer[j * xres + i].red >> 4);
+			framebuffer[3 * ARRAY(i, j) + 0] = char(pixelbuffer[j * xres + i].blue >> 4);
+			framebuffer[3 * ARRAY(i, j) + 1] = char(pixelbuffer[j * xres + i].green >> 4);
+			framebuffer[3 * ARRAY(i, j) + 2] = char(pixelbuffer[j * xres + i].red >> 4);
 		}
 	}
 	return GZ_SUCCESS;
@@ -160,51 +164,11 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 
 		// vertex sorting
 		// sort ver1, ver2, ver3 to a low-to-height Y ordering
-		GzCoord verTop = { 0, 0, 0 };
-		GzCoord verBot = { 0, 0, 0 };
-		GzCoord verMid = { 0, 0, 0 };
-		if (ver0[1] > ver1[1] && ver0[1] > ver2[1]) {
-			// verTop is ver0
-			verTop[0] = ver0[0]; verTop[1] = ver0[1]; verTop[2] = ver0[2];
-			if (ver1[1] > ver2[1]) {
-				// verMid is ver1 and verBot is ver2
-				verMid[0] = ver1[0]; verMid[1] = ver1[1]; verMid[2] = ver1[2];
-				verBot[0] = ver2[0]; verBot[1] = ver2[1]; verBot[2] = ver2[2];
-			}
-			else {
-				// verMid is ver2 and verBot is ver1
-				verMid[0] = ver2[0]; verMid[1] = ver2[1]; verMid[2] = ver2[2];
-				verBot[0] = ver1[0]; verBot[1] = ver1[1]; verBot[2] = ver1[2];
-			}
-		}
-		else if (ver1[1] > ver0[1] && ver1[1] > ver2[1]) {
-			// verTop is ver1
-			verTop[0] = ver1[0]; verTop[1] = ver1[1]; verTop[2] = ver1[2];
-			if (ver0[1] > ver2[1]) {
-				// verMid is ver0 and verBot is ver2
-				verMid[0] = ver0[0]; verMid[1] = ver0[1]; verMid[2] = ver0[2];
-				verBot[0] = ver2[0]; verBot[1] = ver2[1]; verBot[1] = ver2[1];
-			}
-			else {
-				// verMid is ver2 and verBot is ver0
-				verMid[0] = ver2[0]; verMid[1] = ver2[1]; verMid[2] = ver2[2];
-				verBot[0] = ver0[0]; verBot[1] = ver0[1]; verBot[2] = ver0[2];
-			}
-		}
-		else if (ver2[1] > ver0[1] && ver2[1] > ver1[1]) {
-			// verTop is 2
-			verTop[0] = ver2[0]; verTop[1] = ver2[1]; verTop[2] = ver2[2];
-			if (ver0[1] > ver1[1]) {
-				// verMid is ver0 and verBot is ver1
-				verMid[0] = ver0[0]; verMid[1] = ver0[1]; verMid[2] = ver0[2];
-				verBot[0] = ver1[0]; verBot[1] = ver1[1]; verBot[2] = ver1[2];
-			}
-			else {
-				// verMid is ver1 and verBot is ver0
-				verMid[0] = ver1[0]; verMid[1] = ver1[1]; verMid[2] = ver1[2];
-				verBot[0] = ver0[0]; verBot[1] = ver0[1]; verBot[2] = ver0[2];
-			}
-		}
+		VertexSorter vertexSorter(ver0, ver1, ver2);
+		vertexSorter.Sort();
+		GzColor verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
+		GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
+		GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
 
 		// setup edge DDAs for top-mid, mid-bot, top-bot
 		typedef struct DigitalDifferentialAnalyzer {
@@ -215,17 +179,17 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 			float slopeZ;
 
 			DigitalDifferentialAnalyzer() {
-				this->start[0] = 0.0f; this->start[1] = 0.0f; this->start[1] = 0.0f;
-				this->end[0] = 0.0f; this->end[1] = 0.0f; this->end[1] = 0.0f;
-				this->current[0] = start[0]; this->current[1] = start[1]; this->current[1] = start[1];
+				this->start[0] = 0.0f; this->start[1] = 0.0f; this->start[2] = 0.0f;
+				this->end[0] = 0.0f; this->end[1] = 0.0f; this->end[2] = 0.0f;
+				this->current[0] = start[0]; this->current[1] = start[1]; this->current[2] = start[2];
 				this->slopeX = 0.0f;
 				this->slopeZ = 0.0f;
 			}
 
 			DigitalDifferentialAnalyzer(GzCoord &start, GzCoord &end, bool initToScanLine) {
-				this->start[0] = start[0]; this->start[1] = start[1]; this->start[1] = start[1];
-				this->end[0] = end[0]; this->end[1] = end[1]; this->end[1] = end[1];
-				this->current[0] = start[0]; this->current[1] = start[1]; this->current[1] = start[1];
+				this->start[0] = start[0]; this->start[1] = start[1]; this->start[2] = start[2];
+				this->end[0] = end[0]; this->end[1] = end[1]; this->end[2] = end[2];
+				this->current[0] = start[0]; this->current[1] = start[1]; this->current[2] = start[2];
 				this->slopeX = (end[0] - start[0]) / (end[1] - start[1]);
 				this->slopeZ = (end[2] - start[2]) / (end[1] - start[1]);
 				if (initToScanLine) {
@@ -248,46 +212,29 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				this->current[2] += slopeZ * deltaY;
 			}
 
-			/*
-			Description:
-			This function is used to move the current point back to the start point;
-			Input:
-			@ void parameter: void;
-			Output:
-			@ void returnValue: void;
-			*/
-			void Reset() {
-				this->current[0] = this->start[0];
-				this->current[1] = this->start[1];
-				this->current[2] = this->start[2];
-			}
 
 		} DDA;
-		DDA ddaTopBot(verTop, verBot, false);
 
 		// find L/R relationship to determine clockwise edges
 		// clockwise edges could be either top-bot-mid or top-mid-bot
-		typedef struct DigitalDifferentialPixelDrawer {
-			DDA shortEdge;
-			DDA longEdge;
-			bool isLongEdgeOnLeft = false;
+		DDA ddaTopBot(verTop, verBot, false);
+		ddaTopBot.MoveY(verMid[1] - verTop[1]);
 
-			DigitalDifferentialPixelDrawer(DDA &shortEdge, DDA &longEdge) {
-				this->shortEdge = shortEdge;
-				this->longEdge = longEdge;
+		auto Render = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
+			// from the start line to the end line (along y)
+			for (int j = shortEdge.current[1]; j >= ceil(shortEdge.end[1]); j--) {
+				if (j < 0 || j > this->yres) continue;
+				// from the start pixel to the end pixel (along x)
+				if (isShortEdgeOnRight) {
+
+				}
+				else {
+
+				}
 			}
+		};
 
-			void Render() {
-
-			}
-
-		} DDPixelDrawer;
-
-
-		float deltaY = verMid[1] - verTop[1];
-		float deltaX = ddaTopBot.slopeX * deltaY;
-
-		if (verTop[0] + deltaX < verMid[0]) {
+		if (ddaTopBot.current[0] < verMid[0]) {
 			// vermid is on the right
 
 			// initialize DDAs for top-bot edge and top-mid edge
@@ -301,8 +248,9 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				if (j < 0 || j > yres) continue;
 
 				// from the start pixel to the end pixel (along x)
-				for (int i = ceil(ddaTopMid.current[0]); i >= ddaTopBot.current[0]; i--) {
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, 0);
+				for (int i = floor(ddaTopMid.current[0]); i >= ddaTopBot.current[0]; i--) {
+					float z = (ddaTopMid.current[2] - ddaTopBot.current[2]) / (ddaTopMid.current[0] - ddaTopBot.current[0]) * (i - ddaTopMid.current[0]) + ddaTopMid.current[2];
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 				}
 
 				// move the current points to the next pixel line (scan line by scan line)
@@ -316,8 +264,9 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				if (j < 0 || j > yres) continue;
 
 				// from the start pixel to the end pixel (along x)
-				for (int i = ceil(ddaMidBot.current[0]); i >= ddaTopBot.current[0]; i--) {
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, 0);
+				for (int i = floor(ddaMidBot.current[0]); i >= ddaTopBot.current[0]; i--) {
+					float z = (ddaMidBot.current[2] - ddaTopBot.current[2]) / (ddaMidBot.current[0] - ddaTopBot.current[0]) * (i - ddaMidBot.current[0]) + ddaMidBot.current[2];
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 				}
 
 				// move the current points to the next pixel line (scan line by scan line)
@@ -326,7 +275,7 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 			}
 
 		}
-		else if (verTop[0] + deltaX > verMid[0]) {
+		else if (ddaTopBot.current[0] > verMid[0]) {
 			// vermid is on the left
 
 			// initialize DDAs for top-bot edge and top-mid edge
@@ -341,7 +290,8 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 
 				// from the start pixel to the end pixel (along x)
 				for (int i = ceil(ddaTopMid.current[0]); i <= ddaTopBot.current[0]; i++) {
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, 0);
+					float z = (ddaTopMid.current[2] - ddaTopBot.current[2]) / (ddaTopMid.current[0] - ddaTopBot.current[0]) * (i - ddaTopMid.current[0]) + ddaTopMid.current[2];
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 				}
 
 				// move the current points to the next pixel line (scan line by scan line)
@@ -356,7 +306,8 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 
 				// from the start pixel to the end pixel (along x)
 				for (int i = ceil(ddaMidBot.current[0]); i <= ddaTopBot.current[0]; i++) {
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, 0);
+					float z = (ddaMidBot.current[2] - ddaTopBot.current[2]) / (ddaMidBot.current[0] - ddaTopBot.current[0]) * (i - ddaMidBot.current[0]) + ddaMidBot.current[2];
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 				}
 
 				// move the current points to the next pixel line (scan line by scan line)
