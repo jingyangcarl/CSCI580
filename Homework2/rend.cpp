@@ -9,8 +9,7 @@
 #include <string>
 #include <sstream>
 
-GzRender::GzRender(int xRes, int yRes)
-{
+GzRender::GzRender(int xRes, int yRes) {
 /* HW1.1 create a framebuffer for MS Windows display:
  -- set display resolution
  -- allocate memory for framebuffer : 3 bytes(b, g, r) x width x height
@@ -22,15 +21,13 @@ GzRender::GzRender(int xRes, int yRes)
 	this->pixelbuffer = new GzPixel[xRes * yRes];
 }
 
-GzRender::~GzRender()
-{
+GzRender::~GzRender() {
 /* HW1.2 clean up, free buffer memory */
 	delete[] this->framebuffer;
 	delete[] this->pixelbuffer;
 }
 
-int GzRender::GzDefault()
-{
+int GzRender::GzDefault() {
 /* HW1.3 set pixel buffer to some default values - start a new frame */
 	for (int i = 0; i < xres; i++) {
 		for (int j = 0; j < yres; j++) {
@@ -38,15 +35,14 @@ int GzRender::GzDefault()
 			pixelbuffer[j * xres + i].green = 4095;
 			pixelbuffer[j * xres + i].blue = 4095;
 			pixelbuffer[j * xres + i].alpha = 1;
-			pixelbuffer[j * xres + i].z = 0;
+			pixelbuffer[j * xres + i].z = MAXINT;
 		}
 	}
 	return GZ_SUCCESS;
 }
 
 
-int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z)
-{
+int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z) {
 /* HW1.4 write pixel values into the buffer */
 	if (i >= 0 && i < xres && j >= 0 && j < yres) {
 		pixelbuffer[j * xres + i].red = r < 4095 ? r : 4095;
@@ -56,14 +52,13 @@ int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, G
 		pixelbuffer[j * xres + i].z = z;
 	}
 	else {
-
+		GZ_FAILURE;
 	}
 	return GZ_SUCCESS;
 }
 
 
-int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth *z)
-{
+int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth *z) {
 /* HW1.5 retrieve a pixel information from the pixel buffer */
 	if (i >= 0 && i < xres && j >= 0 && j < yres) {
 		*r = pixelbuffer[j * xres + i].red;
@@ -79,8 +74,7 @@ int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b
 }
 
 
-int GzRender::GzFlushDisplay2File(FILE* outfile)
-{
+int GzRender::GzFlushDisplay2File(FILE* outfile) {
 /* HW1.6 write image to ppm file -- "P6 %d %d 255\r" */
 	std::stringstream ss;
 	ss << "P6 " << std::to_string(xres) << " " << std::to_string(yres) << " 255\r";
@@ -101,8 +95,7 @@ int GzRender::GzFlushDisplay2File(FILE* outfile)
 	return GZ_SUCCESS;
 }
 
-int GzRender::GzFlushDisplay2FrameBuffer()
-{
+int GzRender::GzFlushDisplay2FrameBuffer() {
 /* HW1.7 write pixels to framebuffer: 
 	- put the pixels into the frame buffer
 	- CAUTION: when storing the pixels into the frame buffer, the order is blue, green, and red 
@@ -122,8 +115,7 @@ int GzRender::GzFlushDisplay2FrameBuffer()
 /***********************************************/
 /* HW2 methods: implement from here */
 
-int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *valueList) 
-{
+int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *valueList) {
 /* HW 2.1
 -- Set renderer attribute states (e.g.: GZ_RGB_COLOR default color)
 -- In later homeworks set shaders, interpolaters, texture maps, and lights
@@ -133,9 +125,9 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 	switch (nameList[0]) {
 	case GZ_RGB_COLOR: 
 
-		this->flatcolor[0] = (*color)[0];
-		this->flatcolor[1] = (*color)[1];
-		this->flatcolor[2] = (*color)[2];
+		this->flatcolor[0] = ctoi((*color)[0]);
+		this->flatcolor[1] = ctoi((*color)[1]);
+		this->flatcolor[2] = ctoi((*color)[2]);
 
 		return GZ_SUCCESS;
 		break;
@@ -146,9 +138,8 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 
 }
 
-int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueList) 
+int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueList) {
 /* numParts - how many names and values */
-{
 /* HW 2.2
 -- Pass in a triangle description with tokens and values corresponding to
       GZ_NULL_TOKEN:		do nothing - no values
@@ -231,12 +222,16 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				this->slopeZ = 0.0f;
 			}
 
-			DigitalDifferentialAnalyzer(GzCoord &start, GzCoord &end) {
+			DigitalDifferentialAnalyzer(GzCoord &start, GzCoord &end, bool initToScanLine) {
 				this->start[0] = start[0]; this->start[1] = start[1]; this->start[1] = start[1];
 				this->end[0] = end[0]; this->end[1] = end[1]; this->end[1] = end[1];
 				this->current[0] = start[0]; this->current[1] = start[1]; this->current[1] = start[1];
 				this->slopeX = (end[0] - start[0]) / (end[1] - start[1]);
 				this->slopeZ = (end[2] - start[2]) / (end[1] - start[1]);
+				if (initToScanLine) {
+					// move current points to nearest pixel scan line
+					MoveY(floor(start[1]) - start[1]);
+				}
 			}
 
 			/*
@@ -268,17 +263,22 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 			}
 
 		} DDA;
-		DDA ddaTopBot(verTop, verBot);
+		DDA ddaTopBot(verTop, verBot, false);
 
 		// find L/R relationship to determine clockwise edges
 		// clockwise edges could be either top-bot-mid or top-mid-bot
 		typedef struct DigitalDifferentialPixelDrawer {
 			DDA shortEdge;
 			DDA longEdge;
+			bool isLongEdgeOnLeft = false;
 
-			DigitalDifferentialPixelDrawer(DDA shortEdge, DDA longEdge) {
+			DigitalDifferentialPixelDrawer(DDA &shortEdge, DDA &longEdge) {
 				this->shortEdge = shortEdge;
 				this->longEdge = longEdge;
+			}
+
+			void Render() {
+
 			}
 
 		} DDPixelDrawer;
@@ -291,28 +291,18 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 			// vermid is on the right
 
 			// initialize DDAs for top-bot edge and top-mid edge
-			DDA ddaTopBot(verTop, verBot);
-			DDA ddaTopMid(verTop, verMid);
-
-			// move current points to pixel line
-			ddaTopMid.MoveY(floorf(ddaTopMid.start[1]) - ddaTopMid.start[1]);
-			ddaTopBot.MoveY(floorf(ddaTopBot.start[1]) - ddaTopBot.start[1]);
+			DDA ddaTopBot(verTop, verBot, true);
+			DDA ddaTopMid(verTop, verMid, true);
+			DDA ddaMidBot(verMid, verBot, true);
 
 			// from the start line to the end line (along y)
-			for (int j = ddaTopMid.current[1]; j > ceil(ddaTopMid.end[1]); j--) {
+			for (int j = ddaTopMid.current[1]; j >= ceil(ddaTopMid.end[1]); j--) {
 
 				if (j < 0 || j > yres) continue;
 
 				// from the start pixel to the end pixel (along x)
 				for (int i = ceil(ddaTopMid.current[0]); i >= ddaTopBot.current[0]; i--) {
-
-					if (i < 0 || i > xres) continue;
-
-					// add color
-					pixelbuffer[ARRAY(i, j)].red = flatcolor[0] * 4096;
-					pixelbuffer[ARRAY(i, j)].green = flatcolor[1] * 4096;
-					pixelbuffer[ARRAY(i, j)].blue = flatcolor[2] * 4096;
-					pixelbuffer[ARRAY(i, j)].alpha = 0 * 4096;
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, 0);
 				}
 
 				// move the current points to the next pixel line (scan line by scan line)
@@ -320,29 +310,14 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				ddaTopBot.MoveY(-1);
 			}
 
-			// initialize DDAs for top-bot edge and mid-bot edge
-			ddaTopBot.Reset();
-			DDA ddaMidBot(verMid, verBot);
-
-			// move current points to pixel line
-			ddaMidBot.MoveY(floorf(ddaMidBot.start[1]) - ddaMidBot.start[1]);
-			ddaTopBot.MoveY(floorf(ddaTopBot.start[1]) - ddaTopBot.start[1]);
-
 			// from the start line to the end line (along y)
-			for (int j = ddaMidBot.current[1]; j > ceil(ddaMidBot.end[1]); j--) {
+			for (int j = ddaMidBot.current[1]; j >= ceil(ddaMidBot.end[1]); j--) {
 
 				if (j < 0 || j > yres) continue;
 
 				// from the start pixel to the end pixel (along x)
 				for (int i = ceil(ddaMidBot.current[0]); i >= ddaTopBot.current[0]; i--) {
-
-					if (i < 0 || i > xres) continue;
-
-					// add color
-					pixelbuffer[ARRAY(i, j)].red = flatcolor[0] * 4096;
-					pixelbuffer[ARRAY(i, j)].green = flatcolor[1] * 4096;
-					pixelbuffer[ARRAY(i, j)].blue = flatcolor[2] * 4096;
-					pixelbuffer[ARRAY(i, j)].alpha = 0 * 4096;
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, 0);
 				}
 
 				// move the current points to the next pixel line (scan line by scan line)
@@ -355,28 +330,18 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 			// vermid is on the left
 
 			// initialize DDAs for top-bot edge and top-mid edge
-			DDA ddaTopBot(verTop, verBot);
-			DDA ddaTopMid(verTop, verMid);
-
-			// move current points to pixel line
-			ddaTopMid.MoveY(floorf(ddaTopMid.start[1]) - ddaTopMid.start[1]);
-			ddaTopBot.MoveY(floorf(ddaTopBot.start[1]) - ddaTopBot.start[1]);
+			DDA ddaTopBot(verTop, verBot, true);
+			DDA ddaTopMid(verTop, verMid, true);
+			DDA ddaMidBot(verMid, verBot, true);
 
 			// from the start line to the end line (along y)
-			for (int j = ddaTopMid.current[1]; j > ceil(ddaTopMid.end[1]); j--) {
+			for (int j = ddaTopMid.current[1]; j >= ceil(ddaTopMid.end[1]); j--) {
 
 				if (j < 0 || j > yres) continue;
 
 				// from the start pixel to the end pixel (along x)
 				for (int i = ceil(ddaTopMid.current[0]); i <= ddaTopBot.current[0]; i++) {
-
-					if (i < 0 || i > xres) continue;
-
-					// add color
-					pixelbuffer[ARRAY(i, j)].red = flatcolor[0] * 4096;
-					pixelbuffer[ARRAY(i, j)].green = flatcolor[1] * 4096;
-					pixelbuffer[ARRAY(i, j)].blue = flatcolor[2] * 4096;
-					pixelbuffer[ARRAY(i, j)].alpha = 0 * 4096;
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, 0);
 				}
 
 				// move the current points to the next pixel line (scan line by scan line)
@@ -384,29 +349,14 @@ int GzRender::GzPutTriangle(int	numParts, GzToken *nameList, GzPointer *valueLis
 				ddaTopBot.MoveY(-1);
 			}
 
-			// initialize DDAs for top-bot edge and mid-bot edge
-			ddaTopBot.Reset();
-			DDA ddaMidBot(verMid, verBot);
-
-			// move current points to pixel line
-			ddaMidBot.MoveY(floorf(ddaMidBot.start[1]) - ddaMidBot.start[1]);
-			ddaTopBot.MoveY(floorf(ddaTopBot.start[1]) - ddaTopBot.start[1]);
-
 			// from the start line to the end line (along y)
-			for (int j = ddaMidBot.current[1]; j > ceil(ddaMidBot.end[1]); j--) {
+			for (int j = ddaMidBot.current[1]; j >= ceil(ddaMidBot.end[1]); j--) {
 
 				if (j < 0 || j > yres) continue;
 
 				// from the start pixel to the end pixel (along x)
 				for (int i = ceil(ddaMidBot.current[0]); i <= ddaTopBot.current[0]; i++) {
-
-					if (i < 0 || i > xres) continue;
-
-					// add color
-					pixelbuffer[ARRAY(i, j)].red = flatcolor[0] * 4096;
-					pixelbuffer[ARRAY(i, j)].green = flatcolor[1] * 4096;
-					pixelbuffer[ARRAY(i, j)].blue = flatcolor[2] * 4096;
-					pixelbuffer[ARRAY(i, j)].alpha = 0 * 4096;
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, 0);
 				}
 
 				// move the current points to the next pixel line (scan line by scan line)
