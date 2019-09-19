@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -139,6 +139,7 @@
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="rend.cpp" />
     <ClCompile Include="rendDigitalDifferentialAnalyzer.cpp" />
+    <ClCompile Include="rendMatrixOperator.cpp" />
     <ClCompile Include="rendVertexSorter.cpp" />
     <ClCompile Include="RotateDlg.cpp" />
     <ClCompile Include="ScaleDlg.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="rend.h" />
     <ClInclude Include="rendDigitalDifferentialAnalyzer.h" />
+    <ClInclude Include="rendMatrixOperator.h" />
     <ClInclude Include="rendVertexSorter.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RotateDlg.h" />

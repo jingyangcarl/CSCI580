@@ -214,7 +214,12 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 - push a matrix onto the Ximage stack
 - check for stack overflow
 */
-	
+	if (matlevel >= MATLEVELS) return GZ_FAILURE;
+
+	if (matlevel == 0) {
+		Ximage[matlevel][0][0] = matrix[0][0]
+	}
+
 	return GZ_SUCCESS;
 }
 
@@ -258,7 +263,7 @@ int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b
 		*z = pixelbuffer[ARRAY(i, j)].z;
 	}
 	else {
-
+		GZ_FAILURE;
 	}
 	return GZ_SUCCESS;
 }
