@@ -11,7 +11,7 @@ public:
 public:
 	// Operations
 	void GenerateMatrixRotation(float u, float v, float w, float degree);
-	void GenerateMatrixTransformation(float tx, float ty, float tz);
+	void GenerateMatrixTranslation(float tx, float ty, float tz);
 	void GenerateMatrixScale(float sx, float sy, float sz);
 	void MatrixCopy(GzMatrix source, GzMatrix destination);
 	void MatrixAdd(GzMatrix operand1, GzMatrix operand2);

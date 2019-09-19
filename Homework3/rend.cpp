@@ -57,7 +57,7 @@ int GzRender::GzTrxMat(GzCoord translate, GzMatrix mat)
 // Pass back the matrix using mat value
 */
 	MatrixOperator matrixOperator;
-	matrixOperator.GenerateMatrixTransformation(translate[0], translate[1], translate[2]);
+	matrixOperator.GenerateMatrixTranslation(translate[0], translate[1], translate[2]);
 	matrixOperator.GetResult(mat);
 	return GZ_SUCCESS;
 }
