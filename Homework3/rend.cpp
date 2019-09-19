@@ -19,7 +19,24 @@ int GzRender::GzRotXMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along x axis
 // Pass back the matrix using mat value
 */
-
+	float radian = degree * PI / 180.0f;
+	float rotVector[3] = { 1.0f, 0.0f, 0.0f };
+	mat[0][0] = rotVector[0] * rotVector[0] + (1 - rotVector[0] * rotVector[0]) * cos(radian);
+	mat[0][1] = rotVector[0] * rotVector[1] * (1 - cos(radian)) - rotVector[2] * sin(radian);
+	mat[0][2] = rotVector[0] * rotVector[2] * (1 - cos(radian)) + rotVector[1] * sin(radian);
+	mat[0][3] = 0.0f;
+	mat[1][0] = rotVector[0] * rotVector[1] * (1 - cos(radian)) + rotVector[2] * sin(radian);
+	mat[1][1] = rotVector[1] * rotVector[1] + (1 - rotVector[1] * rotVector[1]) * cos(radian);
+	mat[1][2] = rotVector[1] * rotVector[2] * (1 - cos(radian)) - rotVector[0] * sin(radian);
+	mat[1][3] = 0.0f;
+	mat[2][0] = rotVector[0] * rotVector[2] * (1 - cos(radian)) - rotVector[1] * sin(radian);
+	mat[2][1] = rotVector[1] * rotVector[2] * (1 - cos(radian)) + rotVector[0] * sin(radian);
+	mat[2][2] = rotVector[2] * rotVector[2] + (1 - rotVector[2] * rotVector[2]) * cos(radian);
+	mat[2][3] = 0.0f;
+	mat[3][0] = 0.0f;
+	mat[3][1] = 0.0f;
+	mat[3][2] = 0.0f;
+	mat[3][3] = 1.0f;
 	return GZ_SUCCESS;
 }
 
@@ -29,7 +46,24 @@ int GzRender::GzRotYMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along y axis
 // Pass back the matrix using mat value
 */
-
+	float radian = degree * PI / 180.0f;
+	float rotVector[3] = { 0.0f, 1.0f, 0.0f };
+	mat[0][0] = rotVector[0] * rotVector[0] + (1 - rotVector[0] * rotVector[0]) * cos(radian);
+	mat[0][1] = rotVector[0] * rotVector[1] * (1 - cos(radian)) - rotVector[2] * sin(radian);
+	mat[0][2] = rotVector[0] * rotVector[2] * (1 - cos(radian)) + rotVector[1] * sin(radian);
+	mat[0][3] = 0.0f;
+	mat[1][0] = rotVector[0] * rotVector[1] * (1 - cos(radian)) + rotVector[2] * sin(radian);
+	mat[1][1] = rotVector[1] * rotVector[1] + (1 - rotVector[1] * rotVector[1]) * cos(radian);
+	mat[1][2] = rotVector[1] * rotVector[2] * (1 - cos(radian)) - rotVector[0] * sin(radian);
+	mat[1][3] = 0.0f;
+	mat[2][0] = rotVector[0] * rotVector[2] * (1 - cos(radian)) - rotVector[1] * sin(radian);
+	mat[2][1] = rotVector[1] * rotVector[2] * (1 - cos(radian)) + rotVector[0] * sin(radian);
+	mat[2][2] = rotVector[2] * rotVector[2] + (1 - rotVector[2] * rotVector[2]) * cos(radian);
+	mat[2][3] = 0.0f;
+	mat[3][0] = 0.0f;
+	mat[3][1] = 0.0f;
+	mat[3][2] = 0.0f;
+	mat[3][3] = 1.0f;
 	return GZ_SUCCESS;
 }
 
@@ -39,7 +73,24 @@ int GzRender::GzRotZMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along z axis
 // Pass back the matrix using mat value
 */
-
+	float radian = degree * PI / 180.0f;
+	float rotVector[3] = { 0.0f, 0.0f, 1.0f };
+	mat[0][0] = rotVector[0] * rotVector[0] + (1 - rotVector[0] * rotVector[0]) * cos(radian);
+	mat[0][1] = rotVector[0] * rotVector[1] * (1 - cos(radian)) - rotVector[2] * sin(radian);
+	mat[0][2] = rotVector[0] * rotVector[2] * (1 - cos(radian)) + rotVector[1] * sin(radian);
+	mat[0][3] = 0.0f;
+	mat[1][0] = rotVector[0] * rotVector[1] * (1 - cos(radian)) + rotVector[2] * sin(radian);
+	mat[1][1] = rotVector[1] * rotVector[1] + (1 - rotVector[1] * rotVector[1]) * cos(radian);
+	mat[1][2] = rotVector[1] * rotVector[2] * (1 - cos(radian)) - rotVector[0] * sin(radian);
+	mat[1][3] = 0.0f;
+	mat[2][0] = rotVector[0] * rotVector[2] * (1 - cos(radian)) - rotVector[1] * sin(radian);
+	mat[2][1] = rotVector[1] * rotVector[2] * (1 - cos(radian)) + rotVector[0] * sin(radian);
+	mat[2][2] = rotVector[2] * rotVector[2] + (1 - rotVector[2] * rotVector[2]) * cos(radian);
+	mat[2][3] = 0.0f;
+	mat[3][0] = 0.0f;
+	mat[3][1] = 0.0f;
+	mat[3][2] = 0.0f;
+	mat[3][3] = 1.0f;
 	return GZ_SUCCESS;
 }
 
@@ -49,7 +100,22 @@ int GzRender::GzTrxMat(GzCoord translate, GzMatrix mat)
 // Create translation matrix
 // Pass back the matrix using mat value
 */
-
+	mat[0][0] = 1.0f;
+	mat[0][1] = 0.0f;
+	mat[0][2] = 0.0f;
+	mat[0][3] = translate[0];
+	mat[1][0] = 0.0f;
+	mat[1][1] = 1.0f;
+	mat[1][2] = 0.0f;
+	mat[1][3] = translate[1];
+	mat[2][0] = 0.0f;
+	mat[2][1] = 0.0f;
+	mat[2][2] = 1.0f;
+	mat[2][3] = translate[2];
+	mat[3][0] = 0.0f;
+	mat[3][1] = 0.0f;
+	mat[3][2] = 0.0f;
+	mat[3][3] = 1.0f;
 	return GZ_SUCCESS;
 }
 
@@ -60,7 +126,22 @@ int GzRender::GzScaleMat(GzCoord scale, GzMatrix mat)
 // Create scaling matrix
 // Pass back the matrix using mat value
 */
-
+	mat[0][0] = scale[0];
+	mat[0][1] = 0.0f;
+	mat[0][2] = 0.0f;
+	mat[0][3] = 0.0f;
+	mat[1][0] = 0.0f;
+	mat[1][1] = scale[1];
+	mat[1][2] = 0.0f;
+	mat[1][3] = 0.0f;
+	mat[2][0] = 0.0f;
+	mat[2][1] = 0.0f;
+	mat[2][2] = scale[2];
+	mat[2][3] = 0.0f;
+	mat[3][0] = 0.0f;
+	mat[3][1] = 0.0f;
+	mat[3][2] = 0.0f;
+	mat[3][3] = 1.0f;
 	return GZ_SUCCESS;
 }
 
