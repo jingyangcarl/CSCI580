@@ -10,6 +10,7 @@
 #include	<string>
 #include	"rendVertexSorter.h"
 #include	"rendDigitalDifferentialAnalyzer.h"
+#include	"rendMatrixOperator.h"
 
 #define PI (float) 3.14159265358979323846
 
@@ -19,24 +20,9 @@ int GzRender::GzRotXMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along x axis
 // Pass back the matrix using mat value
 */
-	float radian = degree * PI / 180.0f;
-	float rotVector[3] = { 1.0f, 0.0f, 0.0f };
-	mat[0][0] = rotVector[0] * rotVector[0] + (1 - rotVector[0] * rotVector[0]) * cos(radian);
-	mat[0][1] = rotVector[0] * rotVector[1] * (1 - cos(radian)) - rotVector[2] * sin(radian);
-	mat[0][2] = rotVector[0] * rotVector[2] * (1 - cos(radian)) + rotVector[1] * sin(radian);
-	mat[0][3] = 0.0f;
-	mat[1][0] = rotVector[0] * rotVector[1] * (1 - cos(radian)) + rotVector[2] * sin(radian);
-	mat[1][1] = rotVector[1] * rotVector[1] + (1 - rotVector[1] * rotVector[1]) * cos(radian);
-	mat[1][2] = rotVector[1] * rotVector[2] * (1 - cos(radian)) - rotVector[0] * sin(radian);
-	mat[1][3] = 0.0f;
-	mat[2][0] = rotVector[0] * rotVector[2] * (1 - cos(radian)) - rotVector[1] * sin(radian);
-	mat[2][1] = rotVector[1] * rotVector[2] * (1 - cos(radian)) + rotVector[0] * sin(radian);
-	mat[2][2] = rotVector[2] * rotVector[2] + (1 - rotVector[2] * rotVector[2]) * cos(radian);
-	mat[2][3] = 0.0f;
-	mat[3][0] = 0.0f;
-	mat[3][1] = 0.0f;
-	mat[3][2] = 0.0f;
-	mat[3][3] = 1.0f;
+	MatrixOperator matrixOperator;
+	matrixOperator.GenerateMatrixRotation(1.0f, 0.0f, 0.0f, degree);
+	matrixOperator.GetResult(mat);
 	return GZ_SUCCESS;
 }
 
@@ -46,24 +32,9 @@ int GzRender::GzRotYMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along y axis
 // Pass back the matrix using mat value
 */
-	float radian = degree * PI / 180.0f;
-	float rotVector[3] = { 0.0f, 1.0f, 0.0f };
-	mat[0][0] = rotVector[0] * rotVector[0] + (1 - rotVector[0] * rotVector[0]) * cos(radian);
-	mat[0][1] = rotVector[0] * rotVector[1] * (1 - cos(radian)) - rotVector[2] * sin(radian);
-	mat[0][2] = rotVector[0] * rotVector[2] * (1 - cos(radian)) + rotVector[1] * sin(radian);
-	mat[0][3] = 0.0f;
-	mat[1][0] = rotVector[0] * rotVector[1] * (1 - cos(radian)) + rotVector[2] * sin(radian);
-	mat[1][1] = rotVector[1] * rotVector[1] + (1 - rotVector[1] * rotVector[1]) * cos(radian);
-	mat[1][2] = rotVector[1] * rotVector[2] * (1 - cos(radian)) - rotVector[0] * sin(radian);
-	mat[1][3] = 0.0f;
-	mat[2][0] = rotVector[0] * rotVector[2] * (1 - cos(radian)) - rotVector[1] * sin(radian);
-	mat[2][1] = rotVector[1] * rotVector[2] * (1 - cos(radian)) + rotVector[0] * sin(radian);
-	mat[2][2] = rotVector[2] * rotVector[2] + (1 - rotVector[2] * rotVector[2]) * cos(radian);
-	mat[2][3] = 0.0f;
-	mat[3][0] = 0.0f;
-	mat[3][1] = 0.0f;
-	mat[3][2] = 0.0f;
-	mat[3][3] = 1.0f;
+	MatrixOperator matrixOperator;
+	matrixOperator.GenerateMatrixRotation(0.0f, 1.0f, 0.0f, degree);
+	matrixOperator.GetResult(mat);
 	return GZ_SUCCESS;
 }
 
@@ -73,24 +44,9 @@ int GzRender::GzRotZMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along z axis
 // Pass back the matrix using mat value
 */
-	float radian = degree * PI / 180.0f;
-	float rotVector[3] = { 0.0f, 0.0f, 1.0f };
-	mat[0][0] = rotVector[0] * rotVector[0] + (1 - rotVector[0] * rotVector[0]) * cos(radian);
-	mat[0][1] = rotVector[0] * rotVector[1] * (1 - cos(radian)) - rotVector[2] * sin(radian);
-	mat[0][2] = rotVector[0] * rotVector[2] * (1 - cos(radian)) + rotVector[1] * sin(radian);
-	mat[0][3] = 0.0f;
-	mat[1][0] = rotVector[0] * rotVector[1] * (1 - cos(radian)) + rotVector[2] * sin(radian);
-	mat[1][1] = rotVector[1] * rotVector[1] + (1 - rotVector[1] * rotVector[1]) * cos(radian);
-	mat[1][2] = rotVector[1] * rotVector[2] * (1 - cos(radian)) - rotVector[0] * sin(radian);
-	mat[1][3] = 0.0f;
-	mat[2][0] = rotVector[0] * rotVector[2] * (1 - cos(radian)) - rotVector[1] * sin(radian);
-	mat[2][1] = rotVector[1] * rotVector[2] * (1 - cos(radian)) + rotVector[0] * sin(radian);
-	mat[2][2] = rotVector[2] * rotVector[2] + (1 - rotVector[2] * rotVector[2]) * cos(radian);
-	mat[2][3] = 0.0f;
-	mat[3][0] = 0.0f;
-	mat[3][1] = 0.0f;
-	mat[3][2] = 0.0f;
-	mat[3][3] = 1.0f;
+	MatrixOperator matrixOperator;
+	matrixOperator.GenerateMatrixRotation(0.0f, 0.0f, 1.0f, degree);
+	matrixOperator.GetResult(mat);
 	return GZ_SUCCESS;
 }
 
@@ -100,22 +56,9 @@ int GzRender::GzTrxMat(GzCoord translate, GzMatrix mat)
 // Create translation matrix
 // Pass back the matrix using mat value
 */
-	mat[0][0] = 1.0f;
-	mat[0][1] = 0.0f;
-	mat[0][2] = 0.0f;
-	mat[0][3] = translate[0];
-	mat[1][0] = 0.0f;
-	mat[1][1] = 1.0f;
-	mat[1][2] = 0.0f;
-	mat[1][3] = translate[1];
-	mat[2][0] = 0.0f;
-	mat[2][1] = 0.0f;
-	mat[2][2] = 1.0f;
-	mat[2][3] = translate[2];
-	mat[3][0] = 0.0f;
-	mat[3][1] = 0.0f;
-	mat[3][2] = 0.0f;
-	mat[3][3] = 1.0f;
+	MatrixOperator matrixOperator;
+	matrixOperator.GenerateMatrixTransformation(translate[0], translate[1], translate[2]);
+	matrixOperator.GetResult(mat);
 	return GZ_SUCCESS;
 }
 
@@ -126,22 +69,9 @@ int GzRender::GzScaleMat(GzCoord scale, GzMatrix mat)
 // Create scaling matrix
 // Pass back the matrix using mat value
 */
-	mat[0][0] = scale[0];
-	mat[0][1] = 0.0f;
-	mat[0][2] = 0.0f;
-	mat[0][3] = 0.0f;
-	mat[1][0] = 0.0f;
-	mat[1][1] = scale[1];
-	mat[1][2] = 0.0f;
-	mat[1][3] = 0.0f;
-	mat[2][0] = 0.0f;
-	mat[2][1] = 0.0f;
-	mat[2][2] = scale[2];
-	mat[2][3] = 0.0f;
-	mat[3][0] = 0.0f;
-	mat[3][1] = 0.0f;
-	mat[3][2] = 0.0f;
-	mat[3][3] = 1.0f;
+	MatrixOperator matrixOperator;
+	matrixOperator.GenerateMatrixScale(scale[0], scale[1], scale[2]);
+	matrixOperator.GetResult(mat);
 	return GZ_SUCCESS;
 }
 
@@ -215,9 +145,18 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 - check for stack overflow
 */
 	if (matlevel >= MATLEVELS) return GZ_FAILURE;
+	MatrixOperator matrixOperator;
 
 	if (matlevel == 0) {
-		Ximage[matlevel][0][0] = matrix[0][0]
+		matrixOperator.MatrixCopy(matrix, Ximage[matlevel]);
+	}
+	else if (matlevel > 0) {
+		matrixOperator.Reset();
+		matrixOperator.MatrixMul(Ximage[matlevel], matrix);
+		matrixOperator.GetResult(Ximage[++matlevel]);
+	}
+	else {
+		return GZ_FAILURE;
 	}
 
 	return GZ_SUCCESS;

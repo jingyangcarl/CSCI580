@@ -5,19 +5,17 @@ class MatrixOperator {
 public:
 
 	MatrixOperator();
-
-	GzMatrix* GetResult();
-
-private:
-	void ResultReset();
+	void Reset();
+	void GetResult(GzMatrix des);
 
 public:
 	// Operations
-	GzMatrix* MatrixAdd(GzMatrix& operand1, GzMatrix& operand2);
-	GzMatrix* MatrixMul(GzMatrix& operand1, GzMatrix& operand2);
-	GzMatrix* GenerateMatrixRotation(float u, float v, float w, float angle);
-	GzMatrix* GenerateMatrixTransformation(float tx, float ty, float tz);
-	GzMatrix* GenerateMatrixScale(float sx, float sy, float sz);
+	void GenerateMatrixRotation(float u, float v, float w, float degree);
+	void GenerateMatrixTransformation(float tx, float ty, float tz);
+	void GenerateMatrixScale(float sx, float sy, float sz);
+	void MatrixCopy(GzMatrix source, GzMatrix destination);
+	void MatrixAdd(GzMatrix operand1, GzMatrix operand2);
+	void MatrixMul(GzMatrix operand1, GzMatrix operand2);
 
 private:
 	GzMatrix result;
