@@ -18,7 +18,8 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-#define INFILE3  "pot4.asc"
+//#define INFILE3  "pot4.asc"
+#define INFILE3  "tri.asc"
 #define OUTFILE3 "output.ppm"
 
 void shade(GzCoord norm, GzCoord color);
@@ -110,9 +111,9 @@ GzMatrix	rotateY =
 	status |= m_pRender->GzBeginRender();
 
 	/* Push model matricies */
-	status |= m_pRender->GzPushMatrix(scale);  
-	status |= m_pRender->GzPushMatrix(rotateY); 
-	status |= m_pRender->GzPushMatrix(rotateX);
+	//status |= m_pRender->GzPushMatrix(scale);  
+	//status |= m_pRender->GzPushMatrix(rotateY); 
+	//status |= m_pRender->GzPushMatrix(rotateX);
 
 	if (status) 
 		return(GZ_FAILURE); 
@@ -168,8 +169,6 @@ int Application3::Render()
 	* and render each triangle 
 	*/ 
 	i = 0;
-
-	int index(0), index2(0);
 	while( fscanf(infile, "%s", dummy) == 1) { 	/* read in tri word */
 	    fscanf(infile, "%f %f %f %f %f %f %f %f", 
 		&(vertexList[0][0]), &(vertexList[0][1]),  
@@ -206,8 +205,6 @@ int Application3::Render()
 
 	     m_pRender->GzPutTriangle(1, nameListTriangle, valueListTriangle); 
 
-		 index++;
-		 index2++;
 	} 
 
 	m_pRender->GzFlushDisplay2File(outfile); 	/* write out or update display to file*/

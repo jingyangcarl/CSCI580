@@ -22,7 +22,7 @@ int GzRender::GzRotXMat(float degree, GzMatrix mat)
 */
 	MatrixOperator matrixOperator;
 	matrixOperator.GenerateMatrixRotation(1.0f, 0.0f, 0.0f, degree);
-	matrixOperator.GetResult(mat);
+	matrixOperator.GetResultMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -34,7 +34,7 @@ int GzRender::GzRotYMat(float degree, GzMatrix mat)
 */
 	MatrixOperator matrixOperator;
 	matrixOperator.GenerateMatrixRotation(0.0f, 1.0f, 0.0f, degree);
-	matrixOperator.GetResult(mat);
+	matrixOperator.GetResultMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -46,7 +46,7 @@ int GzRender::GzRotZMat(float degree, GzMatrix mat)
 */
 	MatrixOperator matrixOperator;
 	matrixOperator.GenerateMatrixRotation(0.0f, 0.0f, 1.0f, degree);
-	matrixOperator.GetResult(mat);
+	matrixOperator.GetResultMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -58,7 +58,7 @@ int GzRender::GzTrxMat(GzCoord translate, GzMatrix mat)
 */
 	MatrixOperator matrixOperator;
 	matrixOperator.GenerateMatrixTranslation(translate[0], translate[1], translate[2]);
-	matrixOperator.GetResult(mat);
+	matrixOperator.GetResultMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -71,7 +71,7 @@ int GzRender::GzScaleMat(GzCoord scale, GzMatrix mat)
 */
 	MatrixOperator matrixOperator;
 	matrixOperator.GenerateMatrixScale(scale[0], scale[1], scale[2]);
-	matrixOperator.GetResult(mat);
+	matrixOperator.GetResultMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -93,6 +93,20 @@ GzRender::GzRender(int xRes, int yRes)
 - setup Xsp and anything only done once 
 - init default camera 
 */ 
+	// set up default camera
+	this->m_camera.lookat[0] = 0.0f;
+	this->m_camera.lookat[1] = 0.0f;
+	this->m_camera.lookat[2] = 0.0f;
+	this->m_camera.position[0] = DEFAULT_IM_X;
+	this->m_camera.position[1] = DEFAULT_IM_Y;
+	this->m_camera.position[2] = DEFAULT_IM_Z;
+	this->m_camera.worldup[0] = 0.0f;
+	this->m_camera.worldup[1] = 1.0f;
+	this->m_camera.worldup[2] = 0.0f;
+	this->m_camera.FOV = DEFAULT_FOV;
+
+	// set up stack
+	this->matlevel = -1;
 }
 
 GzRender::~GzRender()
@@ -125,6 +139,51 @@ int GzRender::GzBeginRender()
 - init Ximage - put Xsp at base of stack, push on Xpi and Xiw 
 - now stack contains Xsw and app can push model Xforms when needed 
 */ 
+	// set up default frame buffer;
+	GzDefault();
+
+	// define variables;
+	//GzMatrix Xsp, Xpi, Xiw;
+	MatrixOperator matrixOperator;
+
+	// compute Xsp
+	Xsp[0][0] = xres / 2;	Xsp[0][1] = 0.0f;		Xsp[0][2] = 0.0f;	Xsp[0][3] = xres / 2;
+	Xsp[1][0] = 0.0f;		Xsp[1][1] = -yres / 2;	Xsp[1][2] = 0.0f;	Xsp[1][3] = yres / 2;
+	Xsp[2][0] = 0.0f;		Xsp[2][1] = 0.0f;		Xsp[2][2] = MAXINT;	Xsp[2][3] = 0.0f;
+	Xsp[3][0] = 0.0f;		Xsp[3][1] = 0.0f;		Xsp[3][2] = 0.0f;	Xsp[3][3] = 1.0f;
+	GzPushMatrix(Xsp);
+
+	// compute Xpi
+	m_camera.Xpi[0][0] = 1.0f;	m_camera.Xpi[0][1] = 0.0f;	m_camera.Xpi[0][2] = 0.0f;										m_camera.Xpi[0][3] = 0.0f;
+	m_camera.Xpi[1][0] = 0.0f;	m_camera.Xpi[1][1] = 1.0f;	m_camera.Xpi[1][2] = 0.0f;										m_camera.Xpi[1][3] = 0.0f;
+	m_camera.Xpi[2][0] = 0.0f;	m_camera.Xpi[2][1] = 0.0f;	m_camera.Xpi[2][2] = tan((m_camera.FOV / 2.0f) * PI / 180.0f);	m_camera.Xpi[2][3] = 0.0f;
+	m_camera.Xpi[3][0] = 0.0f;	m_camera.Xpi[3][1] = 0.0f;	m_camera.Xpi[3][2] = tan((m_camera.FOV / 2.0f) * PI / 180.0f);	m_camera.Xpi[3][3] = 1.0f;
+	GzPushMatrix(m_camera.Xpi);
+
+	// compute Xiw;
+	GzCoord xVec, yVec, zVec;
+	// zVec = (m_camera.lookat - m_camera.position) / norm(m_camera.lookat - m_camera.position);
+	matrixOperator.Reset();
+	matrixOperator.MatrixSubtract(m_camera.lookat, m_camera.position);
+	matrixOperator.GetResultVector(zVec, true);
+	// yVec = (m_camera.worldup - (m_camera.worldup * zVec) * zVec) / norm(m_camera.worldup - (m_camera.worldup * zVec) * zVec);
+	matrixOperator.Reset();
+	matrixOperator.MatrixDotMul(zVec, matrixOperator.MatrixDotMul(m_camera.worldup, zVec));
+	matrixOperator.GetResultVector(yVec, false);
+	matrixOperator.MatrixSubtract(m_camera.worldup, yVec);
+	matrixOperator.GetResultVector(yVec, true);
+	// xVec = yVec x zVec;
+	matrixOperator.Reset();
+	matrixOperator.MatrixCrossMul(yVec, zVec);
+	matrixOperator.GetResultVector(xVec, false);
+
+	// prepare Xiw
+	matrixOperator.Reset();
+	m_camera.Xiw[0][0] = xVec[0];	m_camera.Xiw[0][1] = xVec[1];	m_camera.Xiw[0][2] = xVec[2];	m_camera.Xiw[0][3] = -matrixOperator.MatrixDotMul(xVec, m_camera.position);
+	m_camera.Xiw[1][0] = yVec[0];	m_camera.Xiw[1][1] = yVec[1];	m_camera.Xiw[1][2] = yVec[2];	m_camera.Xiw[1][3] = -matrixOperator.MatrixDotMul(yVec, m_camera.position);
+	m_camera.Xiw[2][0] = zVec[0];	m_camera.Xiw[2][1] = zVec[1];	m_camera.Xiw[2][2] = zVec[2];	m_camera.Xiw[2][3] = -matrixOperator.MatrixDotMul(zVec, m_camera.position);
+	m_camera.Xiw[3][0] = 0.0f;		m_camera.Xiw[3][1] = 0.0f;		m_camera.Xiw[3][2] = 0.0f;		m_camera.Xiw[3][3] = 1.0;
+	GzPushMatrix(m_camera.Xiw);
 
 	return GZ_SUCCESS;
 }
@@ -134,7 +193,7 @@ int GzRender::GzPutCamera(GzCamera camera)
 /* HW 3.8 
 /*- overwrite renderer camera structure with new camera definition
 */
-
+	m_camera = camera;
 	return GZ_SUCCESS;	
 }
 
@@ -147,17 +206,24 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 	if (matlevel >= MATLEVELS) return GZ_FAILURE;
 	MatrixOperator matrixOperator;
 
-	if (matlevel == 0) {
-		matrixOperator.MatrixCopy(matrix, Ximage[matlevel]);
+	if (matlevel == -1) {
+		matrixOperator.MatrixCopy(matrix, Ximage[++matlevel]);
 	}
-	else if (matlevel > 0) {
+	else if (matlevel >= 0) {
 		matrixOperator.Reset();
-		matrixOperator.MatrixMul(Ximage[matlevel], matrix);
-		matrixOperator.GetResult(Ximage[++matlevel]);
+		matrixOperator.MatrixDotMul(Ximage[matlevel], matrix);
+		// matrixOperator.MatrixDotMul(matrix, Ximage[matlevel]);
+		matrixOperator.GetResultMatrix(Ximage[++matlevel]);
 	}
 	else {
 		return GZ_FAILURE;
 	}
+	AfxTrace("---push---");
+	AfxTrace("matlevel");
+	AfxTrace("Ximage[matlevel][0]");
+	AfxTrace("Ximage[matlevel][1]");
+	AfxTrace("Ximage[matlevel][2]");
+	AfxTrace("Ximage[matlevel][3]");
 
 	return GZ_SUCCESS;
 }
@@ -168,6 +234,16 @@ int GzRender::GzPopMatrix()
 - pop a matrix off the Ximage stack
 - check for stack underflow
 */
+	if (matlevel < 0) return GZ_SUCCESS;
+	else {
+		matlevel--;
+	}
+	AfxTrace("---pop---");
+	AfxTrace("matlevel");
+	AfxTrace("Ximage[matlevel][0]");
+	AfxTrace("Ximage[matlevel][1]");
+	AfxTrace("Ximage[matlevel][2]");
+	AfxTrace("Ximage[matlevel][3]");
 
 	return GZ_SUCCESS;
 }
@@ -284,10 +360,23 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 -- Invoke the rastrizer/scanline framework
 -- Return error code
 */
+	// prepare ver0, ver1, and ver2;
 	GzCoord* coord = (GzCoord*)(valueList[0]);
 	GzCoord ver0 = { coord[0][0], coord[0][1], coord[0][2] };
 	GzCoord ver1 = { coord[1][0], coord[1][1], coord[1][2] };
 	GzCoord ver2 = { coord[2][0], coord[2][1], coord[2][2] };
+
+	// apply matrix;
+	MatrixOperator matrixOperator;
+	matrixOperator.Reset();
+	matrixOperator.MatrixDotMul(Ximage[matlevel], ver0);
+	matrixOperator.GetResultVector(ver0);
+	matrixOperator.Reset();
+	matrixOperator.MatrixDotMul(Ximage[matlevel], ver1);
+	matrixOperator.GetResultVector(ver1);
+	matrixOperator.Reset();
+	matrixOperator.MatrixDotMul(Ximage[matlevel], ver2);
+	matrixOperator.GetResultVector(ver2);
 
 
 	switch (nameList[0]) {

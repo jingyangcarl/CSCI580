@@ -16,10 +16,24 @@ Output:
 	@ void returnValue: void;
 */
 void MatrixOperator::Reset() {
-	result[0][0] = 0.0f; result[0][1] = 0.0f; result[0][2] = 0.0f; result[0][3] = 0.0f;
-	result[1][0] = 0.0f; result[1][1] = 0.0f; result[1][2] = 0.0f; result[1][3] = 0.0f;
-	result[2][0] = 0.0f; result[2][1] = 0.0f; result[2][2] = 0.0f; result[2][3] = 0.0f;
-	result[3][0] = 0.0f; result[3][1] = 0.0f; result[3][2] = 0.0f; result[3][3] = 0.0f;
+	resultVector[0] = 0.0f; resultVector[1] = 0.0f; resultVector[2] = 0.0f;
+	resultMatrix[0][0] = 0.0f; resultMatrix[0][1] = 0.0f; resultMatrix[0][2] = 0.0f; resultMatrix[0][3] = 0.0f;
+	resultMatrix[1][0] = 0.0f; resultMatrix[1][1] = 0.0f; resultMatrix[1][2] = 0.0f; resultMatrix[1][3] = 0.0f;
+	resultMatrix[2][0] = 0.0f; resultMatrix[2][1] = 0.0f; resultMatrix[2][2] = 0.0f; resultMatrix[2][3] = 0.0f;
+	resultMatrix[3][0] = 0.0f; resultMatrix[3][1] = 0.0f; resultMatrix[3][2] = 0.0f; resultMatrix[3][3] = 0.0f;
+}
+
+void MatrixOperator::GetResultVector(GzCoord des, bool normalize) {
+	des[0] = resultVector[0];
+	des[1] = resultVector[1];
+	des[2] = resultVector[2];
+
+	if (normalize) {
+		float divider = sqrtf(des[0] * des[0] + des[1] * des[1] + des[2] * des[2]);
+		des[0] /= divider;
+		des[1] /= divider;
+		des[2] /= divider;
+	}
 }
 
 /*
@@ -30,11 +44,11 @@ Input:
 Output:
 	@ void returnValue: void;
 */
-void MatrixOperator::GetResult(GzMatrix des) {
-	des[0][0] = result[0][0]; des[0][1] = result[0][1]; des[0][2] = result[0][2]; des[0][3] = result[0][3];
-	des[1][0] = result[1][0]; des[1][1] = result[1][1]; des[1][2] = result[1][2]; des[1][3] = result[1][3];
-	des[2][0] = result[2][0]; des[2][1] = result[2][1]; des[2][2] = result[2][2]; des[2][3] = result[2][3];
-	des[3][0] = result[3][0]; des[3][1] = result[3][1]; des[3][2] = result[3][2]; des[3][3] = result[3][3];
+void MatrixOperator::GetResultMatrix(GzMatrix des) {
+	des[0][0] = resultMatrix[0][0]; des[0][1] = resultMatrix[0][1]; des[0][2] = resultMatrix[0][2]; des[0][3] = resultMatrix[0][3];
+	des[1][0] = resultMatrix[1][0]; des[1][1] = resultMatrix[1][1]; des[1][2] = resultMatrix[1][2]; des[1][3] = resultMatrix[1][3];
+	des[2][0] = resultMatrix[2][0]; des[2][1] = resultMatrix[2][1]; des[2][2] = resultMatrix[2][2]; des[2][3] = resultMatrix[2][3];
+	des[3][0] = resultMatrix[3][0]; des[3][1] = resultMatrix[3][1]; des[3][2] = resultMatrix[3][2]; des[3][3] = resultMatrix[3][3];
 }
 
 /*
@@ -51,22 +65,22 @@ Output:
 void MatrixOperator::GenerateMatrixRotation(float u, float v, float w, float degree) {
 	float radian = degree * PI / 180.0f;
 	float rotVector[3] = { u, v, w };
-	result[0][0] = rotVector[0] * rotVector[0] + (1.0f - rotVector[0] * rotVector[0]) * cos(radian);
-	result[0][1] = rotVector[0] * rotVector[1] * (1.0f - cos(radian)) - rotVector[2] * sin(radian);
-	result[0][2] = rotVector[0] * rotVector[2] * (1.0f - cos(radian)) + rotVector[1] * sin(radian);
-	result[0][3] = 0.0f;
-	result[1][0] = rotVector[0] * rotVector[1] * (1.0f - cos(radian)) + rotVector[2] * sin(radian);
-	result[1][1] = rotVector[1] * rotVector[1] + (1.0f - rotVector[1] * rotVector[1]) * cos(radian);
-	result[1][2] = rotVector[1] * rotVector[2] * (1.0f - cos(radian)) - rotVector[0] * sin(radian);
-	result[1][3] = 0.0f;
-	result[2][0] = rotVector[0] * rotVector[2] * (1.0f - cos(radian)) - rotVector[1] * sin(radian);
-	result[2][1] = rotVector[1] * rotVector[2] * (1.0f - cos(radian)) + rotVector[0] * sin(radian);
-	result[2][2] = rotVector[2] * rotVector[2] + (1.0f - rotVector[2] * rotVector[2]) * cos(radian);
-	result[2][3] = 0.0f;
-	result[3][0] = 0.0f;
-	result[3][1] = 0.0f;
-	result[3][2] = 0.0f;
-	result[3][3] = 1.0f;
+	resultMatrix[0][0] = rotVector[0] * rotVector[0] + (1.0f - rotVector[0] * rotVector[0]) * cos(radian);
+	resultMatrix[0][1] = rotVector[0] * rotVector[1] * (1.0f - cos(radian)) - rotVector[2] * sin(radian);
+	resultMatrix[0][2] = rotVector[0] * rotVector[2] * (1.0f - cos(radian)) + rotVector[1] * sin(radian);
+	resultMatrix[0][3] = 0.0f;
+	resultMatrix[1][0] = rotVector[0] * rotVector[1] * (1.0f - cos(radian)) + rotVector[2] * sin(radian);
+	resultMatrix[1][1] = rotVector[1] * rotVector[1] + (1.0f - rotVector[1] * rotVector[1]) * cos(radian);
+	resultMatrix[1][2] = rotVector[1] * rotVector[2] * (1.0f - cos(radian)) - rotVector[0] * sin(radian);
+	resultMatrix[1][3] = 0.0f;
+	resultMatrix[2][0] = rotVector[0] * rotVector[2] * (1.0f - cos(radian)) - rotVector[1] * sin(radian);
+	resultMatrix[2][1] = rotVector[1] * rotVector[2] * (1.0f - cos(radian)) + rotVector[0] * sin(radian);
+	resultMatrix[2][2] = rotVector[2] * rotVector[2] + (1.0f - rotVector[2] * rotVector[2]) * cos(radian);
+	resultMatrix[2][3] = 0.0f;
+	resultMatrix[3][0] = 0.0f;
+	resultMatrix[3][1] = 0.0f;
+	resultMatrix[3][2] = 0.0f;
+	resultMatrix[3][3] = 1.0f;
 }
 
 /*
@@ -80,22 +94,22 @@ Output:
 	@ void returnValue: void;
 */
 void MatrixOperator::GenerateMatrixTranslation(float tx, float ty, float tz) {
-	result[0][0] = 1.0f;
-	result[0][1] = 0.0f;
-	result[0][2] = 0.0f;
-	result[0][3] = tx;
-	result[1][0] = 0.0f;
-	result[1][1] = 1.0f;
-	result[1][2] = 0.0f;
-	result[1][3] = ty;
-	result[2][0] = 0.0f;
-	result[2][1] = 0.0f;
-	result[2][2] = 1.0f;
-	result[2][3] = tz;
-	result[3][0] = 0.0f;
-	result[3][1] = 0.0f;
-	result[3][2] = 0.0f;
-	result[3][3] = 1.0f;
+	resultMatrix[0][0] = 1.0f;
+	resultMatrix[0][1] = 0.0f;
+	resultMatrix[0][2] = 0.0f;
+	resultMatrix[0][3] = tx;
+	resultMatrix[1][0] = 0.0f;
+	resultMatrix[1][1] = 1.0f;
+	resultMatrix[1][2] = 0.0f;
+	resultMatrix[1][3] = ty;
+	resultMatrix[2][0] = 0.0f;
+	resultMatrix[2][1] = 0.0f;
+	resultMatrix[2][2] = 1.0f;
+	resultMatrix[2][3] = tz;
+	resultMatrix[3][0] = 0.0f;
+	resultMatrix[3][1] = 0.0f;
+	resultMatrix[3][2] = 0.0f;
+	resultMatrix[3][3] = 1.0f;
 }
 
 /*
@@ -109,22 +123,22 @@ Output:
 	@ void returnValue: void;
 */
 void MatrixOperator::GenerateMatrixScale(float sx, float sy, float sz) {
-	result[0][0] = sx;
-	result[0][1] = 0.0f;
-	result[0][2] = 0.0f;
-	result[0][3] = 0.0f;
-	result[1][0] = 0.0f;
-	result[1][1] = sy;
-	result[1][2] = 0.0f;
-	result[1][3] = 0.0f;
-	result[2][0] = 0.0f;
-	result[2][1] = 0.0f;
-	result[2][2] = sz;
-	result[2][3] = 0.0f;
-	result[3][0] = 0.0f;
-	result[3][1] = 0.0f;
-	result[3][2] = 0.0f;
-	result[3][3] = 1.0f;
+	resultMatrix[0][0] = sx;
+	resultMatrix[0][1] = 0.0f;
+	resultMatrix[0][2] = 0.0f;
+	resultMatrix[0][3] = 0.0f;
+	resultMatrix[1][0] = 0.0f;
+	resultMatrix[1][1] = sy;
+	resultMatrix[1][2] = 0.0f;
+	resultMatrix[1][3] = 0.0f;
+	resultMatrix[2][0] = 0.0f;
+	resultMatrix[2][1] = 0.0f;
+	resultMatrix[2][2] = sz;
+	resultMatrix[2][3] = 0.0f;
+	resultMatrix[3][0] = 0.0f;
+	resultMatrix[3][1] = 0.0f;
+	resultMatrix[3][2] = 0.0f;
+	resultMatrix[3][3] = 1.0f;
 }
 
 /*
@@ -142,6 +156,12 @@ void MatrixOperator::MatrixCopy(GzMatrix source, GzMatrix destination) {
 	destination[3][0] = source[3][0]; destination[3][1] = source[3][1]; destination[3][2] = source[3][2]; destination[3][3] = source[3][3];
 }
 
+void MatrixOperator::MatrixAdd(GzCoord operand1, GzCoord operand2) {
+	resultVector[0] = operand1[0] + operand2[0];
+	resultVector[1] = operand1[1] + operand2[1];
+	resultVector[2] = operand1[2] + operand2[2];
+}
+
 /*
 Description:
 	This function is used to add two matrix, where the dimension of each matrix are 4 by 4, the result will be saved in the result matrix;
@@ -153,10 +173,42 @@ Output:
 */
 void MatrixOperator::MatrixAdd(GzMatrix operand1, GzMatrix operand2) {
 	Reset();
-	result[0][0] = operand1[0][0] + operand2[0][0]; result[0][1] = operand1[0][1] + operand2[0][1]; result[0][2] = operand1[0][2] + operand2[0][2]; result[0][3] = operand1[0][3] + operand2[0][3];
-	result[1][0] = operand1[1][0] + operand2[1][0]; result[1][1] = operand1[1][1] + operand2[1][1]; result[1][2] = operand1[1][2] + operand2[1][2]; result[1][3] = operand1[1][3] + operand2[1][3];
-	result[2][0] = operand1[2][0] + operand2[2][0]; result[2][1] = operand1[2][1] + operand2[2][1]; result[2][2] = operand1[2][2] + operand2[2][2]; result[2][3] = operand1[2][3] + operand2[2][3];
-	result[3][0] = operand1[3][0] + operand2[3][0]; result[3][1] = operand1[3][1] + operand2[3][1]; result[3][2] = operand1[3][2] + operand2[3][2]; result[3][3] = operand1[3][3] + operand2[3][3];
+	resultMatrix[0][0] = operand1[0][0] + operand2[0][0]; resultMatrix[0][1] = operand1[0][1] + operand2[0][1]; resultMatrix[0][2] = operand1[0][2] + operand2[0][2]; resultMatrix[0][3] = operand1[0][3] + operand2[0][3];
+	resultMatrix[1][0] = operand1[1][0] + operand2[1][0]; resultMatrix[1][1] = operand1[1][1] + operand2[1][1]; resultMatrix[1][2] = operand1[1][2] + operand2[1][2]; resultMatrix[1][3] = operand1[1][3] + operand2[1][3];
+	resultMatrix[2][0] = operand1[2][0] + operand2[2][0]; resultMatrix[2][1] = operand1[2][1] + operand2[2][1]; resultMatrix[2][2] = operand1[2][2] + operand2[2][2]; resultMatrix[2][3] = operand1[2][3] + operand2[2][3];
+	resultMatrix[3][0] = operand1[3][0] + operand2[3][0]; resultMatrix[3][1] = operand1[3][1] + operand2[3][1]; resultMatrix[3][2] = operand1[3][2] + operand2[3][2]; resultMatrix[3][3] = operand1[3][3] + operand2[3][3];
+}
+
+void MatrixOperator::MatrixSubtract(GzCoord operand1, GzCoord operand2) {
+	resultVector[0] = operand1[0] - operand2[0];
+	resultVector[1] = operand1[1] - operand2[1];
+	resultVector[2] = operand1[2] - operand2[2];
+}
+
+void MatrixOperator::MatrixDotMul(GzCoord operand1, float operand2) {
+	resultVector[0] = operand1[0] * operand2;
+	resultVector[1] = operand1[1] * operand2;
+	resultVector[2] = operand1[2] * operand2;
+}
+
+float MatrixOperator::MatrixDotMul(GzCoord operand1, GzCoord operand2) {
+	return operand1[0] * operand2[0] + operand1[1] * operand2[1] + operand1[2] * operand2[2];
+}
+
+void MatrixOperator::MatrixDotMul(GzMatrix operand1, GzCoord operand2) {
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 4; j++) {
+			resultVector[i] += operand1[i][j] * (j < 3 ? operand2[j] : 1);
+		}
+	}
+}
+
+void MatrixOperator::MatrixDotMul(GzCoord operand1, GzMatrix operand2) {
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 4; j++) {
+			resultVector[i] += (j < 3 ? operand1[j] : 1) * operand2[j][i];
+		}
+	}
 }
 
 /*
@@ -168,14 +220,20 @@ Input:
 Output:
 	@ void returnValue: void;
 */
-void MatrixOperator::MatrixMul(GzMatrix operand1, GzMatrix operand2) {
+void MatrixOperator::MatrixDotMul(GzMatrix operand1, GzMatrix operand2) {
 	Reset();
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			result[i][j] = 0.0f;
+			resultMatrix[i][j] = 0.0f;
 			for (int k = 0; k < 4; k++) {
-				result[i][j] += operand1[i][k] * operand2[k][j];
+				resultMatrix[i][j] += operand1[i][k] * operand2[k][j];
 			}
 		}
 	}
+}
+
+void MatrixOperator::MatrixCrossMul(GzCoord operand1, GzCoord operand2) {
+	resultVector[0] = operand1[1] * operand2[2] - operand1[2] * operand2[1];
+	resultVector[1] = operand1[2] * operand2[0] - operand1[0] * operand2[2];
+	resultVector[2] = operand1[0] * operand2[1] - operand1[1] * operand2[0];
 }
