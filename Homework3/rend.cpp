@@ -11,6 +11,7 @@
 #include	"rendVertexSorter.h"
 #include	"rendDigitalDifferentialAnalyzer.h"
 #include	"rendMatrixOperator.h"
+#include	"rendMatrix.h"
 
 #define PI (float) 3.14159265358979323846
 
@@ -184,6 +185,14 @@ int GzRender::GzBeginRender()
 	m_camera.Xiw[2][0] = zVec[0];	m_camera.Xiw[2][1] = zVec[1];	m_camera.Xiw[2][2] = zVec[2];	m_camera.Xiw[2][3] = -matrixOperator.MatrixDotMul(zVec, m_camera.position);
 	m_camera.Xiw[3][0] = 0.0f;		m_camera.Xiw[3][1] = 0.0f;		m_camera.Xiw[3][2] = 0.0f;		m_camera.Xiw[3][3] = 1.0;
 	GzPushMatrix(m_camera.Xiw);
+
+	// compute Xiw;
+	// zVec = (m_camera.lookat - m_camera.position) / norm(m_camera.lookat - m_camera.position);
+	Matrix zVector((Matrix(m_camera.lookat) - Matrix(m_camera.position)).normalize());
+	// yVec = (m_camera.worldup - (m_camera.worldup * zVec) * zVec) / norm(m_camera.worldup - (m_camera.worldup * zVec) * zVec);
+	Matrix yVector((Matrix(m_camera.worldup) - zVector * (Matrix(m_camera.worldup) * zVector.transpose()).toFloat()).normalize());
+	// xVec = yVec x zVec;
+	Matrix xVector(yVector.CrossProduct(zVector));
 
 	return GZ_SUCCESS;
 }
