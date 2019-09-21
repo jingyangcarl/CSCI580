@@ -143,10 +143,6 @@ int GzRender::GzBeginRender()
 	// set up default frame buffer;
 	GzDefault();
 
-	// define variables;
-	//GzMatrix Xsp, Xpi, Xiw;
-	MatrixOperator matrixOperator;
-
 	// compute Xsp
 	Xsp[0][0] = xres / 2;	Xsp[0][1] = 0.0f;		Xsp[0][2] = 0.0f;	Xsp[0][3] = xres / 2;
 	Xsp[1][0] = 0.0f;		Xsp[1][1] = -yres / 2;	Xsp[1][2] = 0.0f;	Xsp[1][3] = yres / 2;
@@ -164,35 +160,21 @@ int GzRender::GzBeginRender()
 	// compute Xiw;
 	GzCoord xVec, yVec, zVec;
 	// zVec = (m_camera.lookat - m_camera.position) / norm(m_camera.lookat - m_camera.position);
-	matrixOperator.Reset();
-	matrixOperator.MatrixSubtract(m_camera.lookat, m_camera.position);
-	matrixOperator.GetResultVector(zVec, true);
+	Matrix zMatrix = (Matrix(m_camera.lookat) - Matrix(m_camera.position)).normalize();
+	zMatrix.toGzCoord(zVec);
 	// yVec = (m_camera.worldup - (m_camera.worldup * zVec) * zVec) / norm(m_camera.worldup - (m_camera.worldup * zVec) * zVec);
-	matrixOperator.Reset();
-	matrixOperator.MatrixDotMul(zVec, matrixOperator.MatrixDotMul(m_camera.worldup, zVec));
-	matrixOperator.GetResultVector(yVec, false);
-	matrixOperator.MatrixSubtract(m_camera.worldup, yVec);
-	matrixOperator.GetResultVector(yVec, true);
+	Matrix yMatrix = (Matrix(m_camera.worldup) - (Matrix(zVec) * (Matrix(m_camera.worldup) * Matrix(zMatrix.transpose())).toFloat())).normalize();
+	yMatrix.toGzCoord(yVec);
 	// xVec = yVec x zVec;
-	matrixOperator.Reset();
-	matrixOperator.MatrixCrossMul(yVec, zVec);
-	matrixOperator.GetResultVector(xVec, false);
+	Matrix xMatrix(yMatrix.CrossProduct(Matrix(zVec)));
+	xMatrix.toGzCoord(xVec);
 
 	// prepare Xiw
-	matrixOperator.Reset();
-	m_camera.Xiw[0][0] = xVec[0];	m_camera.Xiw[0][1] = xVec[1];	m_camera.Xiw[0][2] = xVec[2];	m_camera.Xiw[0][3] = -matrixOperator.MatrixDotMul(xVec, m_camera.position);
-	m_camera.Xiw[1][0] = yVec[0];	m_camera.Xiw[1][1] = yVec[1];	m_camera.Xiw[1][2] = yVec[2];	m_camera.Xiw[1][3] = -matrixOperator.MatrixDotMul(yVec, m_camera.position);
-	m_camera.Xiw[2][0] = zVec[0];	m_camera.Xiw[2][1] = zVec[1];	m_camera.Xiw[2][2] = zVec[2];	m_camera.Xiw[2][3] = -matrixOperator.MatrixDotMul(zVec, m_camera.position);
+	m_camera.Xiw[0][0] = xVec[0];	m_camera.Xiw[0][1] = xVec[1];	m_camera.Xiw[0][2] = xVec[2];	m_camera.Xiw[0][3] = -(Matrix(xVec) * Matrix(m_camera.position).transpose()).toFloat();
+	m_camera.Xiw[1][0] = yVec[0];	m_camera.Xiw[1][1] = yVec[1];	m_camera.Xiw[1][2] = yVec[2];	m_camera.Xiw[1][3] = -(Matrix(yVec) * Matrix(m_camera.position).transpose()).toFloat();
+	m_camera.Xiw[2][0] = zVec[0];	m_camera.Xiw[2][1] = zVec[1];	m_camera.Xiw[2][2] = zVec[2];	m_camera.Xiw[2][3] = -(Matrix(zVec) * Matrix(m_camera.position).transpose()).toFloat();
 	m_camera.Xiw[3][0] = 0.0f;		m_camera.Xiw[3][1] = 0.0f;		m_camera.Xiw[3][2] = 0.0f;		m_camera.Xiw[3][3] = 1.0;
 	GzPushMatrix(m_camera.Xiw);
-
-	// compute Xiw;
-	// zVec = (m_camera.lookat - m_camera.position) / norm(m_camera.lookat - m_camera.position);
-	Matrix zVector((Matrix(m_camera.lookat) - Matrix(m_camera.position)).normalize());
-	// yVec = (m_camera.worldup - (m_camera.worldup * zVec) * zVec) / norm(m_camera.worldup - (m_camera.worldup * zVec) * zVec);
-	Matrix yVector((Matrix(m_camera.worldup) - zVector * (Matrix(m_camera.worldup) * zVector.transpose()).toFloat()).normalize());
-	// xVec = yVec x zVec;
-	Matrix xVector(yVector.CrossProduct(zVector));
 
 	return GZ_SUCCESS;
 }
@@ -213,16 +195,19 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 - check for stack overflow
 */
 	if (matlevel >= MATLEVELS) return GZ_FAILURE;
-	MatrixOperator matrixOperator;
+	//MatrixOperator matrixOperator;
 
 	if (matlevel == -1) {
-		matrixOperator.MatrixCopy(matrix, Ximage[++matlevel]);
+		//matrixOperator.MatrixCopy(matrix, Ximage[++matlevel]);
+		Matrix value(matrix);
+		value.toGzMatrix(Ximage[++matlevel]);
 	}
 	else if (matlevel >= 0) {
-		matrixOperator.Reset();
-		matrixOperator.MatrixDotMul(Ximage[matlevel], matrix);
-		// matrixOperator.MatrixDotMul(matrix, Ximage[matlevel]);
-		matrixOperator.GetResultMatrix(Ximage[++matlevel]);
+		//matrixOperator.Reset();
+		Matrix value = Matrix(Ximage[matlevel]) * Matrix(matrix);
+		value.toGzMatrix(Ximage[++matlevel]);
+		//matrixOperator.MatrixDotMul(Ximage[matlevel], matrix);
+		//matrixOperator.GetResultMatrix(Ximage[++matlevel]);
 	}
 	else {
 		return GZ_FAILURE;
@@ -376,16 +361,22 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzCoord ver2 = { coord[2][0], coord[2][1], coord[2][2] };
 
 	// apply matrix;
-	MatrixOperator matrixOperator;
-	matrixOperator.Reset();
-	matrixOperator.MatrixDotMul(Ximage[matlevel], ver0);
-	matrixOperator.GetResultVector(ver0);
-	matrixOperator.Reset();
-	matrixOperator.MatrixDotMul(Ximage[matlevel], ver1);
-	matrixOperator.GetResultVector(ver1);
-	matrixOperator.Reset();
-	matrixOperator.MatrixDotMul(Ximage[matlevel], ver2);
-	matrixOperator.GetResultVector(ver2);
+	//MatrixOperator matrixOperator;
+	//matrixOperator.Reset();
+	//matrixOperator.MatrixDotMul(Ximage[matlevel], ver0);
+	//matrixOperator.GetResultVector(ver0);
+	//matrixOperator.Reset();
+	//matrixOperator.MatrixDotMul(Ximage[matlevel], ver1);
+	//matrixOperator.GetResultVector(ver1);
+	//matrixOperator.Reset();
+	//matrixOperator.MatrixDotMul(Ximage[matlevel], ver2);
+	//matrixOperator.GetResultVector(ver2);
+	Matrix projVer0 = Matrix(Ximage[matlevel]) * Matrix(ver0).transpose();
+	Matrix projVer1 = Matrix(Ximage[matlevel]) * Matrix(ver1).transpose();
+	Matrix projVer2 = Matrix(Ximage[matlevel]) * Matrix(ver2).transpose();
+	projVer0.toGzCoord(ver0);
+	projVer1.toGzCoord(ver1);
+	projVer2.toGzCoord(ver2);
 
 
 	switch (nameList[0]) {

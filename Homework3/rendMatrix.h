@@ -31,5 +31,4 @@ private:
 	int row;
 	int col;
 	float** data;
-	float** data_trans;
 };
