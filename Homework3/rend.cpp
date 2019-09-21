@@ -10,7 +10,7 @@
 #include	<string>
 #include	"rendVertexSorter.h"
 #include	"rendDigitalDifferentialAnalyzer.h"
-#include	"rendMatrixOperator.h"
+//#include	"rendMatrixOperator.h"
 #include	"rendMatrix.h"
 
 #define PI (float) 3.14159265358979323846
@@ -21,9 +21,9 @@ int GzRender::GzRotXMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along x axis
 // Pass back the matrix using mat value
 */
-	MatrixOperator matrixOperator;
-	matrixOperator.GenerateMatrixRotation(1.0f, 0.0f, 0.0f, degree);
-	matrixOperator.GetResultMatrix(mat);
+	Matrix matrix(4, 4);
+	matrix.generateMatrixRotation(1.0f, 0.0f, 0.0f, degree);
+	matrix.toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -33,9 +33,9 @@ int GzRender::GzRotYMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along y axis
 // Pass back the matrix using mat value
 */
-	MatrixOperator matrixOperator;
-	matrixOperator.GenerateMatrixRotation(0.0f, 1.0f, 0.0f, degree);
-	matrixOperator.GetResultMatrix(mat);
+	Matrix matrix(4, 4);
+	matrix.generateMatrixRotation(0.0f, 1.0f, 0.0f, degree);
+	matrix.toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -45,9 +45,9 @@ int GzRender::GzRotZMat(float degree, GzMatrix mat)
 // Create rotate matrix : rotate along z axis
 // Pass back the matrix using mat value
 */
-	MatrixOperator matrixOperator;
-	matrixOperator.GenerateMatrixRotation(0.0f, 0.0f, 1.0f, degree);
-	matrixOperator.GetResultMatrix(mat);
+	Matrix matrix(4, 4);
+	matrix.generateMatrixRotation(0.0f, 0.0f, 1.0f, degree);
+	matrix.toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -57,9 +57,9 @@ int GzRender::GzTrxMat(GzCoord translate, GzMatrix mat)
 // Create translation matrix
 // Pass back the matrix using mat value
 */
-	MatrixOperator matrixOperator;
-	matrixOperator.GenerateMatrixTranslation(translate[0], translate[1], translate[2]);
-	matrixOperator.GetResultMatrix(mat);
+	Matrix matrix(4, 4);
+	matrix.generateMatrixTranslation(translate[0], translate[1], translate[2]);
+	matrix.toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
@@ -70,9 +70,9 @@ int GzRender::GzScaleMat(GzCoord scale, GzMatrix mat)
 // Create scaling matrix
 // Pass back the matrix using mat value
 */
-	MatrixOperator matrixOperator;
-	matrixOperator.GenerateMatrixScale(scale[0], scale[1], scale[2]);
-	matrixOperator.GetResultMatrix(mat);
+	Matrix matrix(4, 4);
+	matrix.generateMatrixScale(scale[0], scale[1], scale[2]);
+	matrix.toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 

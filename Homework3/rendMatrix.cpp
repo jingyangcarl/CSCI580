@@ -4,6 +4,9 @@
 
 #define PI (float) 3.14159265358979323846
 
+Matrix::Matrix() {
+}
+
 Matrix::Matrix(int row, int col, float value) {
 	InitEntries(row, col, 0);
 }
