@@ -186,7 +186,7 @@ float Matrix::toFloat() {
 
 /*
 Description:
-This function is used to generate a rotation matrix around a given rotation central vector and rotation angle, the result will saved in the result matrix;
+This static function is used to generate a rotation matrix around a given rotation central vector and rotation angle, the result will saved in the result matrix;
 Input:
 @ float u: x coordination of the rotation vector;
 @ float v: y coordination of the rotation vector;
@@ -220,7 +220,7 @@ Matrix& Matrix::generateMatrixRotation(const float u, const float v, const float
 
 /*
 Description:
-This function is used to generate a translation matrix, the result will be saved in the result matrix;
+This static function is used to generate a translation matrix, the result will be saved in the result matrix;
 Input:
 @ float tx: x coordination of the translation matrix;
 @ float ty: y coordination of the translation matrix;
@@ -239,7 +239,7 @@ Matrix& Matrix::generateMatrixTranslation(const float tx, const float ty, const 
 
 /*
 Description:
-This function is used to generate a scale matrix, the result will be saved in the result matrix;
+This static function is used to generate a scale matrix, the result will be saved in the result matrix;
 Input:
 @ float sx: x coordination of the translation matrix;
 @ float sy: y coordination of the translation matrix;
