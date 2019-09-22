@@ -140,7 +140,6 @@
     <ClCompile Include="rend.cpp" />
     <ClCompile Include="rendDigitalDifferentialAnalyzer.cpp" />
     <ClCompile Include="rendMatrix.cpp" />
-    <ClCompile Include="rendMatrixOperator.cpp" />
     <ClCompile Include="rendVertexSorter.cpp" />
     <ClCompile Include="RotateDlg.cpp" />
     <ClCompile Include="ScaleDlg.cpp" />
@@ -166,7 +165,6 @@
     <ClInclude Include="rend.h" />
     <ClInclude Include="rendDigitalDifferentialAnalyzer.h" />
     <ClInclude Include="rendMatrix.h" />
-    <ClInclude Include="rendMatrixOperator.h" />
     <ClInclude Include="rendVertexSorter.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RotateDlg.h" />

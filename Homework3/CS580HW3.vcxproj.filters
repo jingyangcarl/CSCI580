@@ -54,9 +54,6 @@
     <ClCompile Include="rendVertexSorter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rendMatrixOperator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rendMatrix.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -110,9 +107,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rendVertexSorter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="rendMatrixOperator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rendMatrix.h">

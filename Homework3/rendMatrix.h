@@ -7,8 +7,11 @@ public:
 	Matrix(int rol, int col, float value = 0);
 	Matrix(GzMatrix matrix);
 	Matrix(GzCoord vector);
+	Matrix(GzCoord vector, float fourth);
 
 	void InitEntries(int rol, int col, float value = 0);
+	float** getData();
+	float getData(int rol, int col);
 
 	void toGzMatrix(GzMatrix matrix);
 	void toGzCoord(GzCoord vector);
@@ -25,6 +28,7 @@ public:
 	Matrix& operator-(float operand);
 	Matrix& operator*(Matrix& operand);
 	Matrix& operator*(float operand);
+	Matrix& operator/=(float operand);
 	Matrix& CrossProduct(Matrix& operand);
 
 private:

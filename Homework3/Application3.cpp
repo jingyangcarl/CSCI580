@@ -18,8 +18,7 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-//#define INFILE3  "pot4.asc"
-#define INFILE3  "tri.asc"
+#define INFILE3  "pot4.asc"
 #define OUTFILE3 "output.ppm"
 
 void shade(GzCoord norm, GzCoord color);
@@ -111,9 +110,9 @@ GzMatrix	rotateY =
 	status |= m_pRender->GzBeginRender();
 
 	/* Push model matricies */
-	//status |= m_pRender->GzPushMatrix(scale);  
-	//status |= m_pRender->GzPushMatrix(rotateY); 
-	//status |= m_pRender->GzPushMatrix(rotateX);
+	status |= m_pRender->GzPushMatrix(scale);  
+	status |= m_pRender->GzPushMatrix(rotateY); 
+	status |= m_pRender->GzPushMatrix(rotateX);
 
 	if (status) 
 		return(GZ_FAILURE); 

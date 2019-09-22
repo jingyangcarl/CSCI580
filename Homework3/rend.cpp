@@ -10,7 +10,6 @@
 #include	<string>
 #include	"rendVertexSorter.h"
 #include	"rendDigitalDifferentialAnalyzer.h"
-//#include	"rendMatrixOperator.h"
 #include	"rendMatrix.h"
 
 #define PI (float) 3.14159265358979323846
@@ -163,7 +162,7 @@ int GzRender::GzBeginRender()
 	Matrix zMatrix = (Matrix(m_camera.lookat) - Matrix(m_camera.position)).normalize();
 	zMatrix.toGzCoord(zVec);
 	// yVec = (m_camera.worldup - (m_camera.worldup * zVec) * zVec) / norm(m_camera.worldup - (m_camera.worldup * zVec) * zVec);
-	Matrix yMatrix = (Matrix(m_camera.worldup) - (Matrix(zVec) * (Matrix(m_camera.worldup) * Matrix(zMatrix.transpose())).toFloat())).normalize();
+	Matrix yMatrix = (Matrix(m_camera.worldup) - (Matrix(zVec) * (Matrix(m_camera.worldup) * zMatrix.transpose()).toFloat())).normalize();
 	yMatrix.toGzCoord(yVec);
 	// xVec = yVec x zVec;
 	Matrix xMatrix(yMatrix.CrossProduct(Matrix(zVec)));
@@ -198,7 +197,6 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 	//MatrixOperator matrixOperator;
 
 	if (matlevel == -1) {
-		//matrixOperator.MatrixCopy(matrix, Ximage[++matlevel]);
 		Matrix value(matrix);
 		value.toGzMatrix(Ximage[++matlevel]);
 	}
@@ -206,8 +204,6 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 		//matrixOperator.Reset();
 		Matrix value = Matrix(Ximage[matlevel]) * Matrix(matrix);
 		value.toGzMatrix(Ximage[++matlevel]);
-		//matrixOperator.MatrixDotMul(Ximage[matlevel], matrix);
-		//matrixOperator.GetResultMatrix(Ximage[++matlevel]);
 	}
 	else {
 		return GZ_FAILURE;
@@ -360,23 +356,16 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzCoord ver1 = { coord[1][0], coord[1][1], coord[1][2] };
 	GzCoord ver2 = { coord[2][0], coord[2][1], coord[2][2] };
 
-	// apply matrix;
-	//MatrixOperator matrixOperator;
-	//matrixOperator.Reset();
-	//matrixOperator.MatrixDotMul(Ximage[matlevel], ver0);
-	//matrixOperator.GetResultVector(ver0);
-	//matrixOperator.Reset();
-	//matrixOperator.MatrixDotMul(Ximage[matlevel], ver1);
-	//matrixOperator.GetResultVector(ver1);
-	//matrixOperator.Reset();
-	//matrixOperator.MatrixDotMul(Ximage[matlevel], ver2);
-	//matrixOperator.GetResultVector(ver2);
-	Matrix projVer0 = Matrix(Ximage[matlevel]) * Matrix(ver0).transpose();
-	Matrix projVer1 = Matrix(Ximage[matlevel]) * Matrix(ver1).transpose();
-	Matrix projVer2 = Matrix(Ximage[matlevel]) * Matrix(ver2).transpose();
-	projVer0.toGzCoord(ver0);
-	projVer1.toGzCoord(ver1);
-	projVer2.toGzCoord(ver2);
+	Matrix temp = Matrix(ver0, 1.0f).transpose();
+	Matrix projVer0 = Matrix(Ximage[matlevel]) * Matrix(ver0, 1.0f).transpose();
+	Matrix projVer1 = Matrix(Ximage[matlevel]) * Matrix(ver1, 1.0f).transpose();
+	Matrix projVer2 = Matrix(Ximage[matlevel]) * Matrix(ver2, 1.0f).transpose();
+	projVer0 /= projVer0.getData(3, 0);
+	projVer1 /= projVer1.getData(3, 0);
+	projVer2 /= projVer2.getData(3, 0);
+	projVer0.transpose().toGzCoord(ver0);
+	projVer1.transpose().toGzCoord(ver1);
+	projVer2.transpose().toGzCoord(ver2);
 
 
 	switch (nameList[0]) {

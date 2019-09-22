@@ -28,11 +28,22 @@ Matrix::Matrix(GzCoord vector) {
 	this->col = 3;
 	this->data = new float* [this->row];
 	for (int i = 0; i < row; i++) {
-		this->data[i] = new float[this->row];
+		this->data[i] = new float[this->col];
 		for (int j = 0; j < col; j++) {
 			data[i][j] = vector[j];
 		}
 	}
+}
+
+Matrix::Matrix(GzCoord vector, float fourth) {
+	this->row = 1;
+	this->col = 4;
+	this->data = new float* [this->row];
+	this->data[0] = new float[this->col];
+	for (int j = 0; j < col - 1; j++) {
+		data[0][j] = vector[j];
+	}
+	this->data[0][this->col - 1] = fourth;
 }
 
 void Matrix::InitEntries(int row, int col, float value) {
@@ -45,6 +56,17 @@ void Matrix::InitEntries(int row, int col, float value) {
 			data[i][j] = 0;
 		}
 	}
+}
+
+float** Matrix::getData() {
+	return data;
+}
+
+float Matrix::getData(int row, int col) {
+	if (row >= this->row && row < 0) return -1;
+	if (col >= this->col && col < 0) return -1;
+
+	return this->data[row][col];
 }
 
 void Matrix::toGzMatrix(GzMatrix matrix) {
@@ -122,15 +144,14 @@ Matrix& Matrix::normalize() {
 }
 
 Matrix& Matrix::transpose() {
-	static Matrix result(col, row);
-
-	for (int i = 0; i < result.row; i++) {
-		for (int j = 0; j < result.col; j++) {
-			result.data[i][j] = data[j][i];
+	Matrix* result = new Matrix(col, row);
+	for (int i = 0; i < result->row; i++) {
+		for (int j = 0; j < result->col; j++) {
+			result->data[i][j] = data[j][i];
 		}
 	}
 
-	return result;
+	return *result;
 }
 
 Matrix& Matrix::operator+(const Matrix& operand) {
@@ -176,28 +197,30 @@ Matrix& Matrix::operator-(float operand) {
 Matrix& Matrix::operator*(Matrix& operand) {
 	if (col != operand.row) return *this;
 
-	Matrix result(row, operand.col);
-	for (int i = 0; i < result.col; i++) {
-		for (int j = 0; j < result.col; j++) {
+	Matrix* result = new Matrix(row, operand.col);
+	for (int i = 0; i < result->row; i++) {
+		for (int j = 0; j < result->col; j++) {
 			for (int k = 0; k < operand.row; k++) {
-				result.data[i][j] += this->data[i][k] * operand.data[k][j];
+				result->data[i][j] += this->data[i][k] * operand.data[k][j];
 			}
 		}
 	}
-	
-	InitEntries(row, operand.col);
-	for (int i = 0; i < row; i++) {
-		for (int j = 0; j < col; j++) {
-			data[i][j] = result.data[i][j];
-		}
-	}
-	return *this;
+	return *result;
 }
 
 Matrix& Matrix::operator*(float operand) {
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
 			data[i][j] *= operand;
+		}
+	}
+	return *this;
+}
+
+Matrix& Matrix::operator/=(float operand) {
+	for (int i = 0; i < row; i++) {
+		for (int j = 0; j < col; j++) {
+			data[i][j] /= operand;
 		}
 	}
 	return *this;
