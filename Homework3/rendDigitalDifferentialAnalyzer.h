@@ -4,9 +4,9 @@
 class DigitalDifferentialAnalyzer {
 public:
 	DigitalDifferentialAnalyzer();
-	DigitalDifferentialAnalyzer(GzCoord& start, GzCoord& end, bool initToScanLine);
+	DigitalDifferentialAnalyzer(const GzCoord& start, const GzCoord& end, const bool initToScanLine);
 
-	float* MoveY(float deltaY);
+	float* MoveY(const float deltaY);
 	float* MoveDownward();
 	float* MoveToNearestPixelLocation();
 	void MoveReset();
@@ -14,8 +14,8 @@ public:
 	float* getStart();
 	float* getEnd();
 	float* getCurrent();
-	float getSlopeX();
-	float getSlopeZ();
+	float getSlopeX() const;
+	float getSlopeZ() const;
 
 private:
 	GzCoord start;

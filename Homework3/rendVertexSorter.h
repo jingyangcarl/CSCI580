@@ -4,7 +4,7 @@
 class VertexSorter {
 public:
 	VertexSorter();
-	VertexSorter(GzCoord& ver0, GzCoord& ver1, GzCoord& ver2);
+	VertexSorter(const GzCoord& ver0, const GzCoord& ver1, const GzCoord& ver2);
 
 	void Sort();
 

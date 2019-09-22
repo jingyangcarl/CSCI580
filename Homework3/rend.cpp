@@ -14,68 +14,113 @@
 
 #define PI (float) 3.14159265358979323846
 
+/*
+Description:
+This function is used to generate a rotation matrix around x axis with a given angle;
+Input:
+@ float degree: an rotation angle around x axis;
+@ GzMatrix mat: an empty matrix;
+Output:
+@ GzMatrix mat: a rotation matrix;
+@ int returnValue: status;
+*/
 int GzRender::GzRotXMat(float degree, GzMatrix mat)
 {
 /* HW 3.1
 // Create rotate matrix : rotate along x axis
 // Pass back the matrix using mat value
 */
-	Matrix matrix(4, 4);
-	matrix.generateMatrixRotation(1.0f, 0.0f, 0.0f, degree);
-	matrix.toGzMatrix(mat);
+	Matrix::generateMatrixRotation(1.0f, 0.0f, 0.0f, degree).toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
+/*
+Description:
+This function is used to generate a rotation matrix around y axis with a given angle;
+Input:
+@ float degree: an rotation angle around y axis;
+@ GzMatrix mat: an empty matrix;
+Output:
+@ GzMatrix mat: a rotation matrix;
+@ int returnValue: status;
+*/
 int GzRender::GzRotYMat(float degree, GzMatrix mat)
 {
 /* HW 3.2
 // Create rotate matrix : rotate along y axis
 // Pass back the matrix using mat value
 */
-	Matrix matrix(4, 4);
-	matrix.generateMatrixRotation(0.0f, 1.0f, 0.0f, degree);
-	matrix.toGzMatrix(mat);
+	Matrix::generateMatrixRotation(0.0f, 1.0f, 0.0f, degree).toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
+/*
+Description:
+This function is used to generate a rotation matrix around z axis with a given angle;
+Input:
+@ float degree: an rotation angle around z axis;
+@ GzMatrix mat: an empty matrix;
+Output:
+@ GzMatrix mat: a rotation matrix;
+@ int returnValue: status;
+*/
 int GzRender::GzRotZMat(float degree, GzMatrix mat)
 {
 /* HW 3.3
 // Create rotate matrix : rotate along z axis
 // Pass back the matrix using mat value
 */
-	Matrix matrix(4, 4);
-	matrix.generateMatrixRotation(0.0f, 0.0f, 1.0f, degree);
-	matrix.toGzMatrix(mat);
+	Matrix::generateMatrixRotation(0.0f, 0.0f, 1.0f, degree).toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
+/*
+Description:
+This function is used to generate a translation matrix with a given translation vector;
+Input:
+@ GzCoord translate: an translation vector;
+@ GzMatrix mat: an empty matrix;
+Output:
+@ GzMatrix mat: a translation matrix;
+@ int returnValue: status;
+*/
 int GzRender::GzTrxMat(GzCoord translate, GzMatrix mat)
 {
 /* HW 3.4
 // Create translation matrix
 // Pass back the matrix using mat value
 */
-	Matrix matrix(4, 4);
-	matrix.generateMatrixTranslation(translate[0], translate[1], translate[2]);
-	matrix.toGzMatrix(mat);
+	Matrix::generateMatrixTranslation(translate[0], translate[1], translate[2]).toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
-
+/*
+Description:
+This function is used to generate a scale matrix with a given scale vector;
+Input:
+@ GzCoord scale: an scale vector;
+@ GzMatrix mat: an empty matrix;
+Output:
+@ GzMatrix mat: a scale matrix;
+@ int returnValue: status;
+*/
 int GzRender::GzScaleMat(GzCoord scale, GzMatrix mat)
 {
 /* HW 3.5
 // Create scaling matrix
 // Pass back the matrix using mat value
 */
-	Matrix matrix(4, 4);
-	matrix.generateMatrixScale(scale[0], scale[1], scale[2]);
-	matrix.toGzMatrix(mat);
+	Matrix::generateMatrixScale(scale[0], scale[1], scale[2]).toGzMatrix(mat);
 	return GZ_SUCCESS;
 }
 
-
+/*
+Description:
+This function is a constructor. Initialization includes resolution, framebuffer, pixelbuffer, default camera and projection stack;
+Input:
+@ int xRes: x resolution;
+@ int yRes: y resolution;
+*/
 GzRender::GzRender(int xRes, int yRes)
 {
 /* HW1.1 create a framebuffer for MS Windows display:
@@ -109,6 +154,10 @@ GzRender::GzRender(int xRes, int yRes)
 	this->matlevel = -1;
 }
 
+/*
+Description:
+This function is a destructor;
+*/
 GzRender::~GzRender()
 {
 /* HW1.2 clean up, free buffer memory */
@@ -116,6 +165,14 @@ GzRender::~GzRender()
 	delete[] this->pixelbuffer;
 }
 
+/*
+Description:
+This function is used to setup default pixel values;
+Input:
+@ void parameter: void;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzDefault()
 {
 /* HW1.3 set pixel buffer to some default values - start a new frame */
@@ -131,6 +188,14 @@ int GzRender::GzDefault()
 	return GZ_SUCCESS;
 }
 
+/*
+Description:
+This function is used to prepare projections used for transform model coordinations to world coordinations, camera coordinations, perspective coordinations, and screen coordinations;
+Input:
+@ void parameter: void;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzBeginRender()
 {
 /* HW 3.7 
@@ -178,6 +243,14 @@ int GzRender::GzBeginRender()
 	return GZ_SUCCESS;
 }
 
+/*
+Description:
+This function is used to initialize camera including transformation matrix from world space to camera space, and from camera space to perspective space, current camera location, current look at position, up vector, and horizontal field of view;
+Input:
+@ GzCamera camera: a given camera parameters;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzPutCamera(GzCamera camera)
 {
 /* HW 3.8 
@@ -187,6 +260,14 @@ int GzRender::GzPutCamera(GzCamera camera)
 	return GZ_SUCCESS;	
 }
 
+/*
+Description:
+This function is used to push a matrix to transformation matrix stack, where the pushed matrix should be the multiplication of top matrix and the current matrix;
+Input:
+@ GzMatrix matrix: a matrix to be pushed into the stack;
+Outpu:
+@ int returnValue: status;
+*/
 int GzRender::GzPushMatrix(GzMatrix	matrix)
 {
 /* HW 3.9 
@@ -194,7 +275,6 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 - check for stack overflow
 */
 	if (matlevel >= MATLEVELS) return GZ_FAILURE;
-	//MatrixOperator matrixOperator;
 
 	if (matlevel == -1) {
 		Matrix value(matrix);
@@ -208,16 +288,17 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 	else {
 		return GZ_FAILURE;
 	}
-	AfxTrace("---push---");
-	AfxTrace("matlevel");
-	AfxTrace("Ximage[matlevel][0]");
-	AfxTrace("Ximage[matlevel][1]");
-	AfxTrace("Ximage[matlevel][2]");
-	AfxTrace("Ximage[matlevel][3]");
-
 	return GZ_SUCCESS;
 }
 
+/*
+Description:
+This function is used to pop a matrix from the transformation matrix stack;
+Input:
+@ void parameter: void;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzPopMatrix()
 {
 /* HW 3.10
@@ -228,16 +309,23 @@ int GzRender::GzPopMatrix()
 	else {
 		matlevel--;
 	}
-	AfxTrace("---pop---");
-	AfxTrace("matlevel");
-	AfxTrace("Ximage[matlevel][0]");
-	AfxTrace("Ximage[matlevel][1]");
-	AfxTrace("Ximage[matlevel][2]");
-	AfxTrace("Ximage[matlevel][3]");
-
 	return GZ_SUCCESS;
 }
 
+/*
+Description:
+This function is used to pug a pixel to pixel buffer;
+Input:
+@ int i: x position;
+@ int j: y position;
+@ GzIntensity r: red value;
+@ GzIntensity g: green value;
+@ GzIntensity b: blue value;
+@ GzIntensity a: alpha value;
+@ GzDepth z: depth value;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z)
 {
 /* HW1.4 write pixel values into the buffer */
@@ -256,7 +344,25 @@ int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, G
 	return GZ_SUCCESS;
 }
 
-
+/*
+Description:
+This function is used to get a pixel value from pixel buffer;
+Input:
+@ int i: x position;
+@ int j: y position;
+@ GzIntensity r: an empty red value;
+@ GzIntensity g: an empty green value;
+@ GzIntensity b: an empty blue value;
+@ GzIntensity a: an empty alpha value;
+@ GzDepth z: an empty depth value;
+Output:
+@ GzIntensity r: a red value;
+@ GzIntensity g: a green value;
+@ GzIntensity b: a blue value;
+@ GzIntensity a: an alpha value;
+@ GzDepth z: an empty depth value;
+@ int returnValue: status;
+*/
 int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth *z)
 {
 /* HW1.5 retrieve a pixel information from the pixel buffer */
@@ -273,7 +379,14 @@ int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b
 	return GZ_SUCCESS;
 }
 
-
+/*
+Description:
+This function is used to output the current pixelbuffer to a ppm file;
+Input:
+@ FILE* outfile: a outfile name;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzFlushDisplay2File(FILE* outfile)
 {
 /* HW1.6 write image to ppm file -- "P6 %d %d 255\r" */
@@ -296,6 +409,14 @@ int GzRender::GzFlushDisplay2File(FILE* outfile)
 	return GZ_SUCCESS;
 }
 
+/*
+Description:
+This function is used to push the pixel buffer to frame buffer for display;
+Input:
+@ void parameter: void;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzFlushDisplay2FrameBuffer()
 {
 /* HW1.7 write pixels to framebuffer: 
@@ -316,7 +437,18 @@ int GzRender::GzFlushDisplay2FrameBuffer()
 
 /***********************************************/
 /* HW2 methods: implement from here */
+/***********************************************/
 
+/*
+Description:
+This function is used to set renderer attributes;
+Input:
+@ void numberAttributes: the number of attributes;
+@ GzToken *nameList: a token list, where the token indicates the rendering classification;
+@ GzPointer *valueList: the value for attributes;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *valueList) 
 {
 /* HW 2.1
@@ -340,6 +472,16 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 	}
 }
 
+/*
+Description:
+This function is used to render triangles to pixel buffer, a scan line algorithm is implemented for trangle rasterization;
+Input:
+@ int numParts: the number of parts;
+@ GzToken *nameList: a token list, where the token indicates the rendering classification;
+@ GzPointer *valueList: the value for triangles;
+Output:
+@ int returnValue: status;
+*/
 int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList)
 /* numParts - how many names and values */
 {
@@ -356,7 +498,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzCoord ver1 = { coord[1][0], coord[1][1], coord[1][2] };
 	GzCoord ver2 = { coord[2][0], coord[2][1], coord[2][2] };
 
-	Matrix temp = Matrix(ver0, 1.0f).transpose();
+	// project ver0, ver1 and ver2;
 	Matrix projVer0 = Matrix(Ximage[matlevel]) * Matrix(ver0, 1.0f).transpose();
 	Matrix projVer1 = Matrix(Ximage[matlevel]) * Matrix(ver1, 1.0f).transpose();
 	Matrix projVer2 = Matrix(Ximage[matlevel]) * Matrix(ver2, 1.0f).transpose();
@@ -366,7 +508,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	projVer0.transpose().toGzCoord(ver0);
 	projVer1.transpose().toGzCoord(ver1);
 	projVer2.transpose().toGzCoord(ver2);
-
 
 	switch (nameList[0]) {
 	case GZ_NULL_TOKEN:
@@ -391,7 +532,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		Output:
 		@ auto returnValue: a auto returnValue;
 		*/
-		auto Render = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
+		auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
 			// from the start line to the end line (along y)
 			for (int j = shortEdge.getCurrent()[1]; j >= ceil(shortEdge.getEnd()[1]); j--) {
 				if (j < 0 || j > this->yres) continue;
@@ -437,8 +578,8 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		ddaTopBot.MoveToNearestPixelLocation();
 
 		// if x < verMid[0], the short edge is on the left, or its on the left;
-		Render(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
-		Render(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
+		scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
+		scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
 
 		return GZ_SUCCESS;
 		break;

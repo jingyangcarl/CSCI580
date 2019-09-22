@@ -1,6 +1,14 @@
 #include "stdafx.h"
 #include "rendDigitalDifferentialAnalyzer.h"
 
+/*
+Description:
+This function is a constructor;
+Input:
+@ void parameter: void;
+Output:
+@ DigitalDifferentialAnalyzer returnValue: a DigitalDifferentialAnalyzer
+*/
 DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer() {
 	this->start[0] = 0.0f; this->start[1] = 0.0f; this->start[2] = 0.0f;
 	this->end[0] = 0.0f; this->end[1] = 0.0f; this->end[2] = 0.0f;
@@ -9,7 +17,17 @@ DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer() {
 	this->slopeZ = 0.0f;
 }
 
-DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(GzCoord& start, GzCoord& end, bool initToScanLine) {
+/*
+Description:
+This function is a constructor;
+Input:
+@ const GzCoord& start: a start point;
+@ const GzCoord& end: a end point;
+@ const bool initToScanLine: if put the current point to the nearest pixel line;
+Output:
+@ DigitalDifferentialAnalyzer returnValue: a DigitalDifferentialAnalyzer;
+*/
+DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(const GzCoord& start, const GzCoord& end, const bool initToScanLine) {
 	this->start[0] = start[0]; this->start[1] = start[1]; this->start[2] = start[2];
 	this->end[0] = end[0]; this->end[1] = end[1]; this->end[2] = end[2];
 	this->current[0] = start[0]; this->current[1] = start[1]; this->current[2] = start[2];
@@ -26,11 +44,11 @@ DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(GzCoord& start, GzCoord
 Description:
 This function is used to move current point, defined as a member variable, along the edge from the start point to the end point by deltaY;
 Input:
-@ float deltaY: a moving distance along y axis;
+@ const float deltaY: a moving distance along y axis;
 Output:
 @ float* returnValue: coordinations of the current point;
 */
-float* DigitalDifferentialAnalyzer::MoveY(float deltaY) {
+float* DigitalDifferentialAnalyzer::MoveY(const float deltaY) {
 	this->current[0] += deltaY ? slopeX * deltaY : 0;
 	this->current[1] += deltaY;
 	this->current[2] += deltaY ? slopeZ * deltaY : 0;
@@ -120,7 +138,7 @@ Input:
 Output:
 @ float returnValue: a slope of deltaX/deltaY;
 */
-float DigitalDifferentialAnalyzer::getSlopeX() {
+float DigitalDifferentialAnalyzer::getSlopeX() const {
 	return this->slopeX;
 }
 
@@ -132,6 +150,6 @@ Input:
 Output:
 @ float returnValue: a slope of deltaZ/deltaY;
 */
-float DigitalDifferentialAnalyzer::getSlopeZ() {
+float DigitalDifferentialAnalyzer::getSlopeZ() const {
 	return this->slopeZ;
 }

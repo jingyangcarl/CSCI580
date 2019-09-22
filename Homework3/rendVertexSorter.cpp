@@ -1,10 +1,28 @@
 #include "stdafx.h"
 #include "rendVertexSorter.h"
 
+/*
+Description:
+This function is a constructor;
+Input:
+@ void parameter: void;
+Output:
+@ VertexSorter returnValue: a VertexSorter;
+*/
 VertexSorter::VertexSorter() {
 }
 
-VertexSorter::VertexSorter(GzCoord& ver0, GzCoord& ver1, GzCoord& ver2) {
+/*
+Description:
+This function is a constructor;
+Input:
+@ const GzCoord& ver0: a vertex;
+@ const GzCoord& ver1: a vertex;
+@ const GzCoord& ver2: a vertex;
+Output:
+@ VertexSorter returnValue: a VertexSorter;
+*/
+VertexSorter::VertexSorter(const GzCoord& ver0, const GzCoord& ver1, const GzCoord& ver2) {
 	this->ver0[0] = ver0[0]; this->ver0[1] = ver0[1]; this->ver0[2] = ver0[2];
 	this->ver1[0] = ver1[0]; this->ver1[1] = ver1[1]; this->ver1[2] = ver1[2];
 	this->ver2[0] = ver2[0]; this->ver2[1] = ver2[1]; this->ver2[2] = ver2[2];
