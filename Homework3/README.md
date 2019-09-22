@@ -243,4 +243,5 @@ This solution is to render a 2D teapot, where the teapot has to be transformed f
         CS580HWDoc.ico
         icon1.ico
         Toolbar.bmp
+
 ```
