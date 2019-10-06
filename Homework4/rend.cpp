@@ -151,6 +151,9 @@ GzRender::GzRender(int xRes, int yRes)
 
 	// set up stack
 	this->matlevel = -1;
+	
+	// set up numlights
+	this->numlights = 0;
 }
 
 /*
@@ -458,36 +461,106 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 		switch (nameList[i]) {
 		case GZ_RGB_COLOR: {
 
-			GzColor* color = (GzColor*)(valueList[0]);
+			// get color from value list
+			GzColor* color = (GzColor*)(valueList[i]);
 
+			// save flat color;
 			this->flatcolor[0] = ctoi((*color)[0]);
 			this->flatcolor[1] = ctoi((*color)[1]);
 			this->flatcolor[2] = ctoi((*color)[2]);
 
 			return GZ_SUCCESS;
 		} break;
+		case GZ_INTERPOLATE: {
+
+			// save interpolation mode
+			this->interp_mode = (int)valueList[i];
+
+			return GZ_SUCCESS;
+		} break;
 		case GZ_DIRECTIONAL_LIGHT: {
 
+			// get light from value list
+			GzLight* light = (GzLight*)(valueList[i]);
+
+			// save light direction
+			this->lights[numlights].direction[0] = light->direction[0];
+			this->lights[numlights].direction[1] = light->direction[1];
+			this->lights[numlights].direction[2] = light->direction[2];
+
+			// save light color
+			this->lights[numlights].color[0] = light->color[0];
+			this->lights[numlights].color[1] = light->color[1];
+			this->lights[numlights].color[2] = light->color[2];
+
+			// update
+			numlights++;
+
+			return GZ_SUCCESS;
 		} break;
 		case GZ_AMBIENT_LIGHT: {
 
+			// get light from value list
+			GzLight* light = (GzLight*)(valueList[i]);
+
+			// save ambient light direction
+			this->ambientlight.direction[0] = light->direction[0];
+			this->ambientlight.direction[1] = light->direction[1];
+			this->ambientlight.direction[2] = light->direction[2];
+
+			// save ambient light color
+			this->ambientlight.color[0] = light->color[0];
+			this->ambientlight.color[1] = light->color[1];
+			this->ambientlight.color[2] = light->color[2];
+
+			return GZ_SUCCESS;
 		} break;
 		case GZ_DIFFUSE_COEFFICIENT: {
 
+			// get coefficients from value list
+			GzColor* coef = (GzColor*)(valueList[i]);
+
+			// save diffuse coefficients
+			this->Kd[0] = (*coef)[0];
+			this->Kd[1] = (*coef)[1];
+			this->Kd[2] = (*coef)[2];
+
+			return GZ_SUCCESS;
 		} break;
 		case GZ_AMBIENT_COEFFICIENT: {
 
+			// get coefficients from value list
+			GzColor* coef = (GzColor*)(valueList[i]);
+
+			// save ambient coefficients
+			this->Ka[0] = (*coef)[0];
+			this->Ka[1] = (*coef)[1];
+			this->Ka[2] = (*coef)[2];
+
+			return GZ_SUCCESS;
 		} break;
 		case GZ_SPECULAR_COEFFICIENT: {
 
+			// get coefficients from value list
+			GzColor* coef = (GzColor*)(valueList[i]);
+
+			// save sepcular coefficients
+			this->Ks[0] = (*coef)[0];
+			this->Ks[1] = (*coef)[1];
+			this->Ks[2] = (*coef)[2];
+
+			return GZ_SUCCESS;
 		} break;
 		case GZ_DISTRIBUTION_COEFFICIENT: {
 
+			this->spec = (int)valueList[i];
+
+			return GZ_SUCCESS;
 		} break;
 		}
 	}
 
-	return GZ_SUCCESS;
+	return GZ_FAILURE;
 }
 
 /*
@@ -520,7 +593,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		case GZ_POSITION: {
 
 			// prepare ver0, ver1, and ver2;
-			GzCoord* coord = (GzCoord*)(valueList[0]);
+			GzCoord* coord = (GzCoord*)(valueList[i]);
 			GzCoord ver0 = { coord[0][0], coord[0][1], coord[0][2] };
 			GzCoord ver1 = { coord[1][0], coord[1][1], coord[1][2] };
 			GzCoord ver2 = { coord[2][0], coord[2][1], coord[2][2] };
@@ -604,6 +677,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
 
 			return GZ_SUCCESS;
+		} break;
+		case GZ_NORMAL: {
+
 		} break;
 		}
 	}
