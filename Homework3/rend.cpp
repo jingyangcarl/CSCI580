@@ -128,7 +128,6 @@ GzRender::GzRender(int xRes, int yRes)
  -- allocate memory for framebuffer : 3 bytes(b, g, r) x width x height
  -- allocate memory for pixel buffer
  */
-	//framebuffer = (char*) malloc (3 * sizeof(char) * xRes * yRes);
 	this->xres = xRes;
 	this->yres = yRes;
 	this->framebuffer = new char[3 * sizeof(char) * xRes * yRes];
