@@ -174,6 +174,22 @@ void Matrix::toGzCoord(GzCoord vector) {
 
 /*
 Description:
+This function is used to copy data entries to a GzColor, if the matrix size is less than GzCoord (1 by 3) return nothing;
+Input:
+@ GzCoord vector: an empty GzCoord;
+Output:
+@ GzCoord vector: a filled GzCoord;
+*/
+void Matrix::toGzColor(GzColor color) {
+	if (row < 1) return;
+	if (col < 3) return;
+	color[0] = data[0][0];
+	color[1] = data[0][1];
+	color[2] = data[0][2];
+}
+
+/*
+Description:
 This function is used to return the very first entry;
 Input:
 @ void parameter: void;
@@ -260,7 +276,7 @@ Matrix& Matrix::generateMatrixScale(const float sx, const float sy, const float 
 Description:
 This function is used to generate a square identity matrix;
 Input:
-@ int rol: row number / column number;
+@ int row: row number / column number;
 Output:
 @ Matrix& returnValue: a reference to the result;
 */
@@ -283,9 +299,29 @@ Output:
 Matrix& Matrix::operator+(const Matrix& operand) {
 	if (operand.row != row || operand.col != col) return *this;
 
+	Matrix* result = new Matrix(row, col);
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			data[i][j] += operand.data[i][j];
+			result->data[i][j] = this->data[i][j] + operand.data[i][j];
+		}
+	}
+	return *result;
+}
+
+/*
+Description:
+This function is a overload of operator+= with a Matrix;
+Input:
+@ const Matrix& operand: a left hand operand;
+Output:
+@ Matrix& returnValue: a reference to the result;
+*/
+Matrix& Matrix::operator+=(const Matrix& operand) {
+	if (operand.row != row || operand.col != col) return *this;
+
+	for (int i = 0; i < row; i++) {
+		for (int j = 0; j < col; j++) {
+			this->data[i][j] += operand.data[i][j];
 		}
 	}
 	return *this;
@@ -300,12 +336,13 @@ Output:
 @ Matrix& returnValue: a reference to the result;
 */
 Matrix& Matrix::operator+(const float operand) {
+	Matrix* result = new Matrix(row, col);
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			data[i][j] += operand;
+			result->data[i][j] = this->data[i][j] + operand;
 		}
 	}
-	return *this;
+	return *result;
 }
 
 /*
@@ -319,12 +356,13 @@ Output:
 Matrix& Matrix::operator-(const Matrix& operand) {
 	if (operand.row != row || operand.col != col) return *this;
 
+	Matrix* result = new Matrix(row, col);
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			data[i][j] -= operand.data[i][j];
+			result->data[i][j] = this->data[i][j] - operand.data[i][j];
 		}
 	}
-	return *this;
+	return *result;
 }
 
 /*
@@ -336,9 +374,10 @@ Output:
 @ Matrix& returnValue: a reference to the result;
 */
 Matrix& Matrix::operator-(const float operand) {
+	Matrix* result = new Matrix(row, col);
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			data[i][j] -= operand;
+			result->data[i][j] = this->data[i][j] - operand;
 		}
 	}
 	return *this;
@@ -368,6 +407,30 @@ Matrix& Matrix::operator*(const Matrix& operand) {
 
 /*
 Description:
+This function is a overload of operator*= with a Matrix;
+Input:
+@ const Matrix& operand: a left hand operand;
+Output:
+@ Matrix& returnValue: a reference to the result;
+*/
+Matrix& Matrix::operator*=(const Matrix& operand) {
+	if (col != operand.row) return *this;
+
+	Matrix* result = new Matrix(row, operand.col);
+	for (int i = 0; i < result->row; i++) {
+		for (int j = 0; j < result->col; j++) {
+			float value(0);
+			for (int k = 0; k < operand.row; k++) {
+				value += this->data[i][k] * operand.data[k][j];
+			}
+			this->data[i][j] = value;
+		}
+	}
+	return *this;
+}
+
+/*
+Description:
 This function is a overload of operator* with a float number;
 Input:
 @ const float operand: a left hand operand;
@@ -375,12 +438,13 @@ Output:
 @ Matrix& returnValue: a reference to the result;
 */
 Matrix& Matrix::operator*(const float operand) {
+	Matrix* result = new Matrix(row, col);
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
-			data[i][j] *= operand;
+			result->data[i][j] = this->data[i][j] * operand;
 		}
 	}
-	return *this;
+	return *result;
 }
 
 /*
@@ -409,11 +473,12 @@ Output:
 @ Matrix& returnValue: a reference to the result;
 */
 Matrix& Matrix::CrossProduct(const Matrix& operand) {
+	Matrix* result = new Matrix(row, col);
 	float x = data[0][0], y = data[0][1], z = data[0][2];
-	data[0][0] = y * operand.data[0][2] - z * operand.data[0][1];
-	data[0][1] = z * operand.data[0][0] - x * operand.data[0][2];
-	data[0][2] = x * operand.data[0][1] - y * operand.data[0][0];
-	return *this;
+	result->data[0][0] = y * operand.data[0][2] - z * operand.data[0][1];
+	result->data[0][1] = z * operand.data[0][0] - x * operand.data[0][2];
+	result->data[0][2] = x * operand.data[0][1] - y * operand.data[0][0];
+	return *result;
 }
 
 /*

@@ -229,6 +229,9 @@ int GzRender::GzBeginRender()
 	Matrix zMatrix = (Matrix(m_camera.lookat) - Matrix(m_camera.position)).normalize();
 	zMatrix.toGzCoord(zVec);
 	// yVec = (m_camera.worldup - (m_camera.worldup * zVec) * zVec) / norm(m_camera.worldup - (m_camera.worldup * zVec) * zVec);
+	Matrix temp = Matrix(m_camera.worldup) * zMatrix.transpose();
+	Matrix temp2 = (Matrix(zVec) * (Matrix(m_camera.worldup) * zMatrix.transpose()).toFloat());
+	Matrix temp3 = Matrix(m_camera.worldup) - (Matrix(zVec) * (Matrix(m_camera.worldup) * zMatrix.transpose()).toFloat());
 	Matrix yMatrix = (Matrix(m_camera.worldup) - (Matrix(zVec) * (Matrix(m_camera.worldup) * zMatrix.transpose()).toFloat())).normalize();
 	yMatrix.toGzCoord(yVec);
 	// xVec = yVec x zVec;
@@ -678,6 +681,29 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	// move current point of the long edge back for rendering
 	ddaTopBot.MoveReset();
 	ddaTopBot.MoveToNearestPixelLocation();
+
+	// calculate the color
+	GzColor specularColor, diffuseColor, ambientColor;
+	// specular color
+	Matrix specular(1, 3);
+	for (int i = 0; i < this->numlights; i++) {
+	}
+
+	// diffuse color
+	Matrix diffuse(1, 3);
+	for (int i = 0; i < this->numlights; i++) {
+		diffuse += Matrix(lights[i].color) * (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+	}
+	(diffuse *= this->Kd).toGzColor(diffuseColor);
+
+	// ambient color
+	Matrix ambient(ambientColor);
+	(ambient * this->Ka).toGzColor(ambientColor);
+
+	GzColor color = { 0.0f, 0.0f, 0.0f };
+	this->flatcolor[0] = ctoi(color[0]);
+	this->flatcolor[1] = ctoi(color[1]);
+	this->flatcolor[2] = ctoi(color[2]);
 
 	// if x < verMid[0], the short edge is on the left, or its on the left;
 	scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
