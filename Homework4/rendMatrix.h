@@ -22,6 +22,7 @@ public:
 	static Matrix& generateMatrixRotation(const float u, const float v, const float w, const float degree);
 	static Matrix& generateMatrixTranslation(const float tx, const float ty, const float tz);
 	static Matrix& generateMatrixScale(const float sx, const float sy, const float sz);
+	static Matrix& generateIdentity(int rol);
 
 	// These functions are used to apply matrix operations;
 	Matrix& operator+(const Matrix& operand);

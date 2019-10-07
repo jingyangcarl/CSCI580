@@ -258,6 +258,22 @@ Matrix& Matrix::generateMatrixScale(const float sx, const float sy, const float 
 
 /*
 Description:
+This function is used to generate a square identity matrix;
+Input:
+@ int rol: row number / column number;
+Output:
+@ Matrix& returnValue: a reference to the result;
+*/
+Matrix& Matrix::generateIdentity(int row) {
+	Matrix* result = new Matrix(row, row);
+	for (int i = 0; i < row; i++) {
+		result->data[i][i] = 1.0f;
+	}
+	return *result;
+}
+
+/*
+Description:
 This function is a overload of operator+ with a Matrix;
 Input:
 @ const Matrix& operand: a left hand operand;

@@ -240,7 +240,7 @@ int GzRender::GzBeginRender()
 	m_camera.Xiw[1][0] = yVec[0];	m_camera.Xiw[1][1] = yVec[1];	m_camera.Xiw[1][2] = yVec[2];	m_camera.Xiw[1][3] = -(Matrix(yVec) * Matrix(m_camera.position).transpose()).toFloat();
 	m_camera.Xiw[2][0] = zVec[0];	m_camera.Xiw[2][1] = zVec[1];	m_camera.Xiw[2][2] = zVec[2];	m_camera.Xiw[2][3] = -(Matrix(zVec) * Matrix(m_camera.position).transpose()).toFloat();
 	m_camera.Xiw[3][0] = 0.0f;		m_camera.Xiw[3][1] = 0.0f;		m_camera.Xiw[3][2] = 0.0f;		m_camera.Xiw[3][3] = 1.0;
-	GzPushMatrix(m_camera.Xiw);
+	GzPushMatrix(m_camera.Xiw, true);
 
 	return GZ_SUCCESS;
 }
@@ -264,13 +264,14 @@ int GzRender::GzPutCamera(GzCamera camera)
 
 /*
 Description:
-This function is used to push a matrix to transformation matrix stack, where the pushed matrix should be the multiplication of top matrix and the current matrix;
+This function is used to push a matrix to transformation matrix Ximage stack, where the pushed matrix should be the multiplication of top matrix and the current matrix;
 Input:
 @ GzMatrix matrix: a matrix to be pushed into the stack;
+@ bool pushToXnorm: push the matrix to Xnorm or not, if it's a false, push an identity to makesure the two stack using the same matlevel;
 Outpu:
 @ int returnValue: status;
 */
-int GzRender::GzPushMatrix(GzMatrix	matrix)
+int GzRender::GzPushMatrix(GzMatrix	matrix, bool pushToXnorm)
 {
 /* HW 3.9 
 - push a matrix onto the Ximage stack
@@ -280,12 +281,20 @@ int GzRender::GzPushMatrix(GzMatrix	matrix)
 
 	if (matlevel == -1) {
 		Matrix value(matrix);
+		// push to Ximage
 		value.toGzMatrix(Ximage[++matlevel]);
+		// push to Xnorm
+		if (pushToXnorm) value.toGzMatrix(Xnorm[matlevel]);
+		else Matrix::generateIdentity(4).toGzMatrix(Xnorm[matlevel]);
 	}
 	else if (matlevel >= 0) {
-		//matrixOperator.Reset();
-		Matrix value = Matrix(Ximage[matlevel]) * Matrix(matrix);
-		value.toGzMatrix(Ximage[++matlevel]);
+		Matrix valueXimage = Matrix(Ximage[matlevel]) * Matrix(matrix);
+		Matrix valueXnorm = Matrix(Xnorm[matlevel]) * Matrix(matrix);
+		// push to Ximage
+		valueXimage.toGzMatrix(Ximage[++matlevel]);
+		// push to Xnorm
+		if (pushToXnorm) valueXnorm.toGzMatrix(Xnorm[matlevel]);
+		else Matrix::generateIdentity(4).toGzMatrix(Xnorm[matlevel]);
 	}
 	else {
 		return GZ_FAILURE;
@@ -469,14 +478,12 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			this->flatcolor[1] = ctoi((*color)[1]);
 			this->flatcolor[2] = ctoi((*color)[2]);
 
-			return GZ_SUCCESS;
 		} break;
 		case GZ_INTERPOLATE: {
 
 			// save interpolation mode
-			this->interp_mode = (int)valueList[i];
+			this->interp_mode = *(float*)(valueList[i]);
 
-			return GZ_SUCCESS;
 		} break;
 		case GZ_DIRECTIONAL_LIGHT: {
 
@@ -496,7 +503,6 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			// update
 			numlights++;
 
-			return GZ_SUCCESS;
 		} break;
 		case GZ_AMBIENT_LIGHT: {
 
@@ -513,7 +519,6 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			this->ambientlight.color[1] = light->color[1];
 			this->ambientlight.color[2] = light->color[2];
 
-			return GZ_SUCCESS;
 		} break;
 		case GZ_DIFFUSE_COEFFICIENT: {
 
@@ -525,7 +530,6 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			this->Kd[1] = (*coef)[1];
 			this->Kd[2] = (*coef)[2];
 
-			return GZ_SUCCESS;
 		} break;
 		case GZ_AMBIENT_COEFFICIENT: {
 
@@ -537,7 +541,6 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			this->Ka[1] = (*coef)[1];
 			this->Ka[2] = (*coef)[2];
 
-			return GZ_SUCCESS;
 		} break;
 		case GZ_SPECULAR_COEFFICIENT: {
 
@@ -549,18 +552,17 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			this->Ks[1] = (*coef)[1];
 			this->Ks[2] = (*coef)[2];
 
-			return GZ_SUCCESS;
 		} break;
 		case GZ_DISTRIBUTION_COEFFICIENT: {
 
-			this->spec = (int)valueList[i];
+			// save specular power
+			this->spec = *(float*)(valueList[i]);
 
-			return GZ_SUCCESS;
 		} break;
 		}
 	}
 
-	return GZ_FAILURE;
+	return GZ_SUCCESS;
 }
 
 /*
@@ -583,105 +585,106 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 -- Invoke the rastrizer/scanline framework
 -- Return error code
 */
+	// prepare ver0, ver1, and ver2;
+	GzCoord* verCoord = (GzCoord*)(valueList[0]);
+	GzCoord ver0 = { verCoord[0][0], verCoord[0][1], verCoord[0][2] };
+	GzCoord ver1 = { verCoord[1][0], verCoord[1][1], verCoord[1][2] };
+	GzCoord ver2 = { verCoord[2][0], verCoord[2][1], verCoord[2][2] };
 
-	// loop through all parts
-	for (int i = 0; i < numParts; i++) {
-		switch (nameList[i]) {
-		case GZ_NULL_TOKEN: {
+	// project ver0, ver1 and ver2;
+	Matrix projVer0 = Matrix(Ximage[matlevel]) * Matrix(ver0, 1.0f).transpose();
+	Matrix projVer1 = Matrix(Ximage[matlevel]) * Matrix(ver1, 1.0f).transpose();
+	Matrix projVer2 = Matrix(Ximage[matlevel]) * Matrix(ver2, 1.0f).transpose();
+	projVer0 /= projVer0.getData(3, 0);
+	projVer1 /= projVer1.getData(3, 0);
+	projVer2 /= projVer2.getData(3, 0);
+	projVer0.transpose().toGzCoord(ver0);
+	projVer1.transpose().toGzCoord(ver1);
+	projVer2.transpose().toGzCoord(ver2);
 
-		} break;
-		case GZ_POSITION: {
+	// prepare norm0, norm1, and norm2;
+	GzCoord* normCoord = (GzCoord*)(valueList[1]);
+	GzCoord norm0 = { normCoord[0][0], normCoord[0][1], normCoord[0][2] };
+	GzCoord norm1 = { normCoord[1][0], normCoord[1][1], normCoord[1][2] };
+	GzCoord norm2 = { normCoord[2][0], normCoord[2][1], normCoord[2][2] };
 
-			// prepare ver0, ver1, and ver2;
-			GzCoord* coord = (GzCoord*)(valueList[i]);
-			GzCoord ver0 = { coord[0][0], coord[0][1], coord[0][2] };
-			GzCoord ver1 = { coord[1][0], coord[1][1], coord[1][2] };
-			GzCoord ver2 = { coord[2][0], coord[2][1], coord[2][2] };
+	// project norm0, norm1, and norm2;
+	Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
+	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
+	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
+	projNorm0.transpose().toGzCoord(norm0);
+	projNorm1.transpose().toGzCoord(norm1);
+	projNorm2.transpose().toGzCoord(norm2);
 
-			// project ver0, ver1 and ver2;
-			Matrix projVer0 = Matrix(Ximage[matlevel]) * Matrix(ver0, 1.0f).transpose();
-			Matrix projVer1 = Matrix(Ximage[matlevel]) * Matrix(ver1, 1.0f).transpose();
-			Matrix projVer2 = Matrix(Ximage[matlevel]) * Matrix(ver2, 1.0f).transpose();
-			projVer0 /= projVer0.getData(3, 0);
-			projVer1 /= projVer1.getData(3, 0);
-			projVer2 /= projVer2.getData(3, 0);
-			projVer0.transpose().toGzCoord(ver0);
-			projVer1.transpose().toGzCoord(ver1);
-			projVer2.transpose().toGzCoord(ver2);
+	// vertex sorting
+	// sort ver1, ver2, ver3 to a low-to-height Y ordering
+	VertexSorter vertexSorter(ver0, ver1, ver2);
+	vertexSorter.Sort();
+	GzColor verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
+	GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
+	GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
 
-			// vertex sorting
-			// sort ver1, ver2, ver3 to a low-to-height Y ordering
-			VertexSorter vertexSorter(ver0, ver1, ver2);
-			vertexSorter.Sort();
-			GzColor verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
-			GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
-			GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
-
-			/*
-			Description:
-			This function is a lambda function defined to render pixels scan line by scan line from the short edge side to long edge side of a triangle by a top-down order;
-			Input:
-			@ DDA& shortEdge: the shorter edge of a triangle;
-			@ DDA& longEdge: the longest edge of a triangle;
-			@ bool isShortEdgeOnRight: if the short edge is on the right of long edge;
-			Output:
-			@ auto returnValue: a auto returnValue;
-			*/
-			auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
-				// from the start line to the end line (along y)
-				for (int j = shortEdge.getCurrent()[1]; j >= ceil(shortEdge.getEnd()[1]); j--) {
-					if (j < 0 || j > this->yres) continue;
-					// from the start pixel to the end pixel (along x)
-					if (isShortEdgeOnRight) {
-						// short edge is on the right of the long edge
-						for (int i = floor(shortEdge.getCurrent()[0]); i >= longEdge.getCurrent()[0]; i--) {
-							float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
-							float deltaX = i - shortEdge.getCurrent()[0];
-							GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
-							GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
-						}
-					}
-					else {
-						// short edge is on the left of the long edge
-						for (int i = ceil(shortEdge.getCurrent()[0]); i <= longEdge.getCurrent()[0]; i++) {
-							float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
-							float deltaX = i - shortEdge.getCurrent()[0];
-							GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
-							GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
-						}
-					}
-					// move the current points to the next pixel line (scan line by scan line)
-					shortEdge.MoveDownward();
-					longEdge.MoveDownward();
+	/*
+	Description:
+	This function is a lambda function defined to render pixels scan line by scan line from the short edge side to long edge side of a triangle by a top-down order;
+	Input:
+	@ DDA& shortEdge: the shorter edge of a triangle;
+	@ DDA& longEdge: the longest edge of a triangle;
+	@ bool isShortEdgeOnRight: if the short edge is on the right of long edge;
+	Output:
+	@ auto returnValue: a auto returnValue;
+	*/
+	auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
+		// from the start line to the end line (along y)
+		for (int j = shortEdge.getCurrent()[1]; j >= ceil(shortEdge.getEnd()[1]); j--) {
+			if (j < 0 || j > this->yres) continue;
+			// from the start pixel to the end pixel (along x)
+			if (isShortEdgeOnRight) {
+				// short edge is on the right of the long edge
+				for (int i = floor(shortEdge.getCurrent()[0]); i >= longEdge.getCurrent()[0]; i--) {
+					float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
+					float deltaX = i - shortEdge.getCurrent()[0];
+					GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 				}
-				return GZ_SUCCESS;
-			};
-
-			// find L/R relationship to determine clockwise edges
-			// clockwise edges could be either top-bot-mid or top-mid-bot
-			// initialize DDAs for top-bot edge and top-mid edge
-			DDA ddaTopBot(verTop, verBot, false);
-			DDA ddaTopMid(verTop, verMid, true);
-			DDA ddaMidBot(verMid, verBot, true);
-
-			// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
-			float xShortEdge = verMid[0];
-			float xLongEdge = ddaTopBot.MoveY(verMid[1] - verTop[1])[0];
-
-			// move current point of the long edge back for rendering
-			ddaTopBot.MoveReset();
-			ddaTopBot.MoveToNearestPixelLocation();
-
-			// if x < verMid[0], the short edge is on the left, or its on the left;
-			scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
-			scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
-
-			return GZ_SUCCESS;
-		} break;
-		case GZ_NORMAL: {
-
-		} break;
+			}
+			else {
+				// short edge is on the left of the long edge
+				for (int i = ceil(shortEdge.getCurrent()[0]); i <= longEdge.getCurrent()[0]; i++) {
+					float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
+					float deltaX = i - shortEdge.getCurrent()[0];
+					GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
+					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
+				}
+			}
+			// move the current points to the next pixel line (scan line by scan line)
+			shortEdge.MoveDownward();
+			longEdge.MoveDownward();
 		}
-	}
+		return GZ_SUCCESS;
+	};
+
+	// find L/R relationship to determine clockwise edges
+	// clockwise edges could be either top-bot-mid or top-mid-bot
+	// initialize DDAs for top-bot edge and top-mid edge
+	DDA ddaTopBot(verTop, verBot, false);
+	DDA ddaTopMid(verTop, verMid, true);
+	DDA ddaMidBot(verMid, verBot, true);
+
+	// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
+	float xShortEdge = verMid[0];
+	float xLongEdge = ddaTopBot.MoveY(verMid[1] - verTop[1])[0];
+
+	// move current point of the long edge back for rendering
+	ddaTopBot.MoveReset();
+	ddaTopBot.MoveToNearestPixelLocation();
+
+	// if x < verMid[0], the short edge is on the left, or its on the left;
+	scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
+	scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
+
+	return GZ_SUCCESS;
+
+	
 }
 

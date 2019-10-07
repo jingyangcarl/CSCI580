@@ -230,7 +230,7 @@ void CCS580HWView::OnRotate()
 		}
 
 		// Accumulate matrix
-		m_pApplication->m_pRender->GzPushMatrix(rotMat); 
+		m_pApplication->m_pRender->GzPushMatrix(rotMat, true); 
 	}
 }
 

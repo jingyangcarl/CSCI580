@@ -20,7 +20,6 @@
 #define GzTexture	GzPointer
 #endif
 
-
 class GzRender{			/* define a renderer */
   
 
@@ -65,7 +64,7 @@ public:
 	// HW3
 	int GzDefaultCamera();
 	int GzPutCamera(GzCamera camera);
-	int GzPushMatrix(GzMatrix matrix);
+	int GzPushMatrix(GzMatrix matrix, bool pushToXnorm = false);
 	int GzPopMatrix();
 	
 	// Extra methods: NOT part of API - just for general assistance */
