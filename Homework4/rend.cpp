@@ -284,8 +284,9 @@ int GzRender::GzPushMatrix(GzMatrix	matrix, bool pushToXnorm)
 
 	if (matlevel == -1) {
 		Matrix value(matrix);
+		matlevel++;
 		// push to Ximage
-		value.toGzMatrix(Ximage[++matlevel]);
+		value.toGzMatrix(Ximage[matlevel]);
 		// push to Xnorm
 		if (pushToXnorm) value.toGzMatrix(Xnorm[matlevel]);
 		else Matrix::generateIdentity(4).toGzMatrix(Xnorm[matlevel]);
@@ -293,11 +294,13 @@ int GzRender::GzPushMatrix(GzMatrix	matrix, bool pushToXnorm)
 	else if (matlevel >= 0) {
 		Matrix valueXimage = Matrix(Ximage[matlevel]) * Matrix(matrix);
 		Matrix valueXnorm = Matrix(Xnorm[matlevel]) * Matrix(matrix);
+		Matrix value(Xnorm[matlevel]);
+		matlevel++;
 		// push to Ximage
-		valueXimage.toGzMatrix(Ximage[++matlevel]);
+		valueXimage.toGzMatrix(Ximage[matlevel]);
 		// push to Xnorm
 		if (pushToXnorm) valueXnorm.toGzMatrix(Xnorm[matlevel]);
-		else Matrix::generateIdentity(4).toGzMatrix(Xnorm[matlevel]);
+		else value.toGzMatrix(Xnorm[matlevel]);
 	}
 	else {
 		return GZ_FAILURE;
@@ -605,25 +608,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	projVer1.transpose().toGzCoord(ver1);
 	projVer2.transpose().toGzCoord(ver2);
 
-	// prepare norm0, norm1, and norm2;
-	GzCoord* normCoord = (GzCoord*)(valueList[1]);
-	GzCoord norm0 = { normCoord[0][0], normCoord[0][1], normCoord[0][2] };
-	GzCoord norm1 = { normCoord[1][0], normCoord[1][1], normCoord[1][2] };
-	GzCoord norm2 = { normCoord[2][0], normCoord[2][1], normCoord[2][2] };
-
-	// project norm0, norm1, and norm2;
-	Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
-	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
-	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
-	projNorm0.transpose().toGzCoord(norm0);
-	projNorm1.transpose().toGzCoord(norm1);
-	projNorm2.transpose().toGzCoord(norm2);
-
 	// vertex sorting
 	// sort ver1, ver2, ver3 to a low-to-height Y ordering
 	VertexSorter vertexSorter(ver0, ver1, ver2);
 	vertexSorter.Sort();
-	GzColor verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
+	GzCoord verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
 	GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
 	GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
 
@@ -682,8 +671,25 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	ddaTopBot.MoveReset();
 	ddaTopBot.MoveToNearestPixelLocation();
 
+	// prepare norm0, norm1, and norm2;
+	GzCoord* normCoord = (GzCoord*)(valueList[1]);
+	GzCoord norm0 = { normCoord[0][0], normCoord[0][1], normCoord[0][2] };
+	GzCoord norm1 = { normCoord[1][0], normCoord[1][1], normCoord[1][2] };
+	GzCoord norm2 = { normCoord[2][0], normCoord[2][1], normCoord[2][2] };
+
+	// project norm0, norm1, and norm2 to model space;
+	Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
+	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
+	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
+	projNorm0.transpose().toGzCoord(norm0, true);
+	projNorm1.transpose().toGzCoord(norm1, true);
+	projNorm2.transpose().toGzCoord(norm2, true);
+
 	// calculate the color
-	GzColor specularColor, diffuseColor, ambientColor;
+	GzColor specularColor = { 0.0f, 0.0f, 0.0f };
+	GzColor diffuseColor = { 0.0f, 0.0f, 0.0f };
+	GzColor ambientColor = { 0.0f, 0.0f, 0.0f };
+	GzColor resultColor = { 0.0f, 0.0f, 0.0f };
 	// specular color
 	Matrix specular(1, 3);
 	for (int i = 0; i < this->numlights; i++) {
@@ -691,19 +697,36 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 	// diffuse color
 	Matrix diffuse(1, 3);
+	GzCoord eye = { 0.0f, 0.0f, -1.0f };
+	GzCoord light = { 0.0f, 0.0f, 0.0f };
 	for (int i = 0; i < this->numlights; i++) {
-		diffuse += Matrix(lights[i].color) * (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+		Matrix projLight = Matrix(Xnorm[matlevel]) * Matrix(lights[i].direction, 1.0f).transpose();
+		projLight.transpose().toGzCoord(light, true);
+		float nDotL = (Matrix(norm0) * Matrix(light).transpose()).toFloat();
+		float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
+
+		if (nDotL > 0 && nDotE > 0) {
+			diffuse += Matrix(lights[i].color) * (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+		}
+		//else if (nDotL < 0 && nDotE < 0) {
+		//	diffuse += Matrix(lights[i].color) * ((-Matrix(norm0)) * Matrix(lights[i].direction).transpose()).toFloat();
+		//}
+		//else {
+
+		//}
+
 	}
 	(diffuse *= this->Kd).toGzColor(diffuseColor);
 
 	// ambient color
-	Matrix ambient(ambientColor);
-	(ambient * this->Ka).toGzColor(ambientColor);
+	//Matrix ambient(this->ambientlight.color);
+	//(ambient * this->Ka).toGzColor(ambientColor);
 
-	GzColor color = { 0.0f, 0.0f, 0.0f };
-	this->flatcolor[0] = ctoi(color[0]);
-	this->flatcolor[1] = ctoi(color[1]);
-	this->flatcolor[2] = ctoi(color[2]);
+	// Color
+	(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);
+	this->flatcolor[0] = ctoi(resultColor[0]);
+	this->flatcolor[1] = ctoi(resultColor[1]);
+	this->flatcolor[2] = ctoi(resultColor[2]);
 
 	// if x < verMid[0], the short edge is on the left, or its on the left;
 	scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);

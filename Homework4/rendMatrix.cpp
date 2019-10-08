@@ -164,12 +164,19 @@ Input:
 Output:
 @ GzCoord vector: a filled GzCoord;
 */
-void Matrix::toGzCoord(GzCoord vector) {
+void Matrix::toGzCoord(GzCoord vector, bool normalize) {
 	if (row < 1) return;
 	if (col < 3) return;
-	vector[0] = data[0][0];
-	vector[1] = data[0][1];
-	vector[2] = data[0][2];
+	if (normalize) {
+		float divider(0);
+		for (int i = 0; i < col; i++) divider += data[0][i] * data[0][i];
+		for (int i = 0; i < col; i++) vector[i] = data[0][i] / sqrt(divider);
+	}
+	else {
+		vector[0] = data[0][0];
+		vector[1] = data[0][1];
+		vector[2] = data[0][2];
+	}
 }
 
 /*
@@ -340,6 +347,24 @@ Matrix& Matrix::operator+(const float operand) {
 	for (int i = 0; i < row; i++) {
 		for (int j = 0; j < col; j++) {
 			result->data[i][j] = this->data[i][j] + operand;
+		}
+	}
+	return *result;
+}
+
+/*
+Description:
+This function is a overload of unary operator-;
+Input:
+@ void parameter: void;
+Output:
+@ Matrix& returnValue: a reference to the result;
+*/
+Matrix& Matrix::operator-() {
+	Matrix* result = new Matrix(row, col);
+	for (int i = 0; i < row; i++) {
+		for (int j = 0; j < col; j++) {
+			result->data[i][j] = -this->data[i][j];
 		}
 	}
 	return *result;

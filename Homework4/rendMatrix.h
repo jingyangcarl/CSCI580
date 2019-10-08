@@ -15,7 +15,7 @@ public:
 	float** getData() const;
 	float getData(const int row, const int col) const;
 	void toGzMatrix(GzMatrix matrix);
-	void toGzCoord(GzCoord vector);
+	void toGzCoord(GzCoord vector, bool normalize = false);
 	void toGzColor(GzColor color);
 	float toFloat();
 
@@ -29,6 +29,7 @@ public:
 	Matrix& operator+(const Matrix& operand);
 	Matrix& operator+=(const Matrix& operand);
 	Matrix& operator+(const float operand);
+	Matrix& operator-();
 	Matrix& operator-(const Matrix& operand);
 	Matrix& operator-(const float operand);
 	Matrix& operator*(const Matrix& operand);
