@@ -706,14 +706,14 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
 
 		if (nDotL > 0 && nDotE > 0) {
-			diffuse += Matrix(lights[i].color) * (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+			diffuse += Matrix(lights[i].color) * nDotL;
 		}
-		//else if (nDotL < 0 && nDotE < 0) {
-		//	diffuse += Matrix(lights[i].color) * ((-Matrix(norm0)) * Matrix(lights[i].direction).transpose()).toFloat();
-		//}
-		//else {
+		else if (nDotL < 0 && nDotE < 0) {
+			diffuse += Matrix(lights[i].color) * -nDotL;
+		}
+		else {
 
-		//}
+		}
 
 	}
 	(diffuse *= this->Kd).toGzColor(diffuseColor);
