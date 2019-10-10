@@ -681,7 +681,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
 	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
 	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
-	projNorm0.transpose().toGzCoord(norm0, true);
+	projNorm0.transpose().toGzCoord(norm0);
 	//projNorm1.transpose().toGzCoord(norm1, true);
 	//projNorm2.transpose().toGzCoord(norm2, true);
 
@@ -708,18 +708,18 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	Matrix diffuse(1, 3);
 	for (int i = 0; i < this->numlights; i++) {
 
-		float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
-		float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
+		//float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+		//float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
 
-		if (nDotL > 0 && nDotE > 0) {
-			diffuse += Matrix(lights[i].color) * nDotL;
-		}
-		else if (nDotL < 0 && nDotE < 0) {
-			diffuse += Matrix(lights[i].color) * -nDotL;
-		}
-		else {
+		//if (nDotL > 0 && nDotE > 0) {
+		//	diffuse += Matrix(lights[i].color) * nDotL;
+		//}
+		//else if (nDotL < 0 && nDotE < 0) {
+		//	diffuse += Matrix(lights[i].color) * -nDotL;
+		//}
+		//else {
 
-		}
+		//}
 
 	}
 	(diffuse * this->Kd[0]).toGzColor(diffuseColor);
