@@ -299,7 +299,25 @@ int GzRender::GzPushMatrix(GzMatrix	matrix, bool pushToXnorm)
 		// push to Ximage
 		valueXimage.toGzMatrix(Ximage[matlevel]);
 		// push to Xnorm
-		if (pushToXnorm) valueXnorm.toGzMatrix(Xnorm[matlevel]);
+		if (pushToXnorm) {
+			GzMatrix result;
+			valueXnorm.toGzMatrix(result);
+			result[0][3] = 0.0;
+			result[1][3] = 0.0;
+			result[2][3] = 0.0;
+			for (int i = 0; i < 3; i++) {
+				float dividor(0);
+				for (int j = 0; j < 3; j++) {
+					dividor += result[i][j] * result[i][j];
+				}
+				dividor = sqrt(dividor);
+				for (int j = 0; j < 3; j++) {
+					result[i][j] /= dividor;
+				}
+			}
+			//valueXnorm.toGzMatrix(Xnorm[matlevel]);
+			Matrix(result).toGzMatrix(Xnorm[matlevel]);
+		}
 		else value.toGzMatrix(Xnorm[matlevel]);
 	}
 	else {
@@ -681,9 +699,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
 	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
 	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
-	projNorm0.transpose().toGzCoord(norm0);
-	//projNorm1.transpose().toGzCoord(norm1, true);
-	//projNorm2.transpose().toGzCoord(norm2, true);
+	projNorm0.transpose().toGzCoord(norm0, true);
+	projNorm1.transpose().toGzCoord(norm1, true);
+	projNorm2.transpose().toGzCoord(norm2, true);
 
 	// calculate the color
 	GzColor specularColor = { 0.0f, 0.0f, 0.0f };
@@ -695,38 +713,49 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 	// specular color
 	Matrix specular(1, 3);
-	//for (int i = 0; i < this->numlights; i++) {
+	for (int i = 0; i < this->numlights; i++) {
+		
+		float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+		float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
+		(Matrix(norm0) * (nDotL * 2) - Matrix(lights[i].direction)).normalize().toGzCoord(reflection);
+		float rDotE = (Matrix(reflection) * Matrix(eye).transpose()).toFloat();
 
-	//	((Matrix(norm0)* Matrix(lights[i].direction)) * 2 - Matrix(lights[i].direction)).normalize().toGzCoord(reflection);
-	//	float rDotE = (Matrix(reflection) * Matrix(eye).transpose()).toFloat();
+		if (nDotL > 0 && nDotE > 0) {
+			specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
+		}
+		else if (nDotL < 0 && nDotE < 0) {
+			// flip normal
+			specular += Matrix(lights[i].color) * pow(-rDotE, this->spec);
+		}
+		else {
 
-	//	specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
-	//}
-	//(specular* this->Ks[0]).toGzColor(specularColor);
+		}
+	}
+	(specular* this->Ks[0]).toGzColor(specularColor);
 
 	// diffuse color
 	Matrix diffuse(1, 3);
 	for (int i = 0; i < this->numlights; i++) {
 
-		//float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
-		//float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
+		float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+		float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
 
-		//if (nDotL > 0 && nDotE > 0) {
-		//	diffuse += Matrix(lights[i].color) * nDotL;
-		//}
-		//else if (nDotL < 0 && nDotE < 0) {
-		//	diffuse += Matrix(lights[i].color) * -nDotL;
-		//}
-		//else {
+		if (nDotL > 0 && nDotE > 0) {
+			diffuse += Matrix(lights[i].color) * nDotL;
+		}
+		else if (nDotL < 0 && nDotE < 0) {
+			diffuse += Matrix(lights[i].color) * -nDotL;
+		}
+		else {
 
-		//}
+		}
 
 	}
 	(diffuse * this->Kd[0]).toGzColor(diffuseColor);
 
-	//// ambient color
-	//Matrix ambient(this->ambientlight.color);
-	//(ambient * this->Ka[0]).toGzColor(ambientColor);
+	// ambient color
+	Matrix ambient(this->ambientlight.color);
+	(ambient * this->Ka[0]).toGzColor(ambientColor);
 
 	//// Color
 	(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);

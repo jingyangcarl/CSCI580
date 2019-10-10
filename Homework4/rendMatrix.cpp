@@ -170,7 +170,7 @@ void Matrix::toGzCoord(GzCoord vector, bool normalize) {
 	if (normalize) {
 		float divider(0);
 		for (int i = 0; i < col; i++) divider += data[0][i] * data[0][i];
-		for (int i = 0; i < col; i++) vector[i] = data[0][i] / sqrt(divider);
+		for (int i = 0; i < 3; i++) vector[i] = data[0][i] / sqrt(divider);
 	}
 	else {
 		vector[0] = data[0][0];
