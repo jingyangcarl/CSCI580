@@ -34,6 +34,7 @@ public:
 	Matrix& operator-(const float operand);
 	Matrix& operator*(const Matrix& operand);
 	Matrix& operator*=(const Matrix& operand);
+	Matrix& operator*=(const float operand);
 	Matrix& operator*(const float operand);
 	Matrix& operator/=(const float operand);
 	Matrix& CrossProduct(const Matrix& operand);

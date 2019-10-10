@@ -176,8 +176,8 @@ GzMatrix	rotateY =
 	status |= m_pRender->GzPutAttribute(5, nameListShader, valueListShader);
 
 	status |= m_pRender->GzPushMatrix(scale);  
-	status |= m_pRender->GzPushMatrix(rotateY, true); 
-	status |= m_pRender->GzPushMatrix(rotateX, true);
+	status |= m_pRender->GzPushMatrix(rotateY); 
+	status |= m_pRender->GzPushMatrix(rotateX);
 
 	if (status) exit(GZ_FAILURE); 
 

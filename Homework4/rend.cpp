@@ -682,27 +682,33 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
 	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
 	projNorm0.transpose().toGzCoord(norm0, true);
-	projNorm1.transpose().toGzCoord(norm1, true);
-	projNorm2.transpose().toGzCoord(norm2, true);
+	//projNorm1.transpose().toGzCoord(norm1, true);
+	//projNorm2.transpose().toGzCoord(norm2, true);
 
 	// calculate the color
 	GzColor specularColor = { 0.0f, 0.0f, 0.0f };
 	GzColor diffuseColor = { 0.0f, 0.0f, 0.0f };
 	GzColor ambientColor = { 0.0f, 0.0f, 0.0f };
 	GzColor resultColor = { 0.0f, 0.0f, 0.0f };
+	GzCoord eye = { 0.0f, 0.0f, -1.0f };
+	GzCoord reflection;
+
 	// specular color
 	Matrix specular(1, 3);
-	for (int i = 0; i < this->numlights; i++) {
-	}
+	//for (int i = 0; i < this->numlights; i++) {
+
+	//	((Matrix(norm0)* Matrix(lights[i].direction)) * 2 - Matrix(lights[i].direction)).normalize().toGzCoord(reflection);
+	//	float rDotE = (Matrix(reflection) * Matrix(eye).transpose()).toFloat();
+
+	//	specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
+	//}
+	//(specular* this->Ks[0]).toGzColor(specularColor);
 
 	// diffuse color
 	Matrix diffuse(1, 3);
-	GzCoord eye = { 0.0f, 0.0f, -1.0f };
-	GzCoord light = { 0.0f, 0.0f, 0.0f };
 	for (int i = 0; i < this->numlights; i++) {
-		Matrix projLight = Matrix(Xnorm[matlevel]) * Matrix(lights[i].direction, 1.0f).transpose();
-		projLight.transpose().toGzCoord(light, true);
-		float nDotL = (Matrix(norm0) * Matrix(light).transpose()).toFloat();
+
+		float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
 		float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
 
 		if (nDotL > 0 && nDotE > 0) {
@@ -716,13 +722,13 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		}
 
 	}
-	(diffuse *= this->Kd).toGzColor(diffuseColor);
+	(diffuse * this->Kd[0]).toGzColor(diffuseColor);
 
-	// ambient color
+	//// ambient color
 	//Matrix ambient(this->ambientlight.color);
-	//(ambient * this->Ka).toGzColor(ambientColor);
+	//(ambient * this->Ka[0]).toGzColor(ambientColor);
 
-	// Color
+	//// Color
 	(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);
 	this->flatcolor[0] = ctoi(resultColor[0]);
 	this->flatcolor[1] = ctoi(resultColor[1]);

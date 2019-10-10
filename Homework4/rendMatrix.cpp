@@ -405,7 +405,7 @@ Matrix& Matrix::operator-(const float operand) {
 			result->data[i][j] = this->data[i][j] - operand;
 		}
 	}
-	return *this;
+	return *result;
 }
 
 /*
@@ -441,14 +441,30 @@ Output:
 Matrix& Matrix::operator*=(const Matrix& operand) {
 	if (col != operand.row) return *this;
 
-	Matrix* result = new Matrix(row, operand.col);
-	for (int i = 0; i < result->row; i++) {
-		for (int j = 0; j < result->col; j++) {
+	for (int i = 0; i < this->row; i++) {
+		for (int j = 0; j < this->col; j++) {
 			float value(0);
 			for (int k = 0; k < operand.row; k++) {
 				value += this->data[i][k] * operand.data[k][j];
 			}
 			this->data[i][j] = value;
+		}
+	}
+	return *this;
+}
+
+/*
+Description:
+This function is a overload of operator*= with a float number;
+Input:
+@ const Matrix& operand: a left hand operand;
+Output:
+@ Matrix& returnValue: a reference to the result;
+*/
+Matrix& Matrix::operator*=(const float operand) {
+	for (int i = 0; i < this->row; i++) {
+		for (int j = 0; j < this->col; j++) {
+			this->data[i][j] *= operand;
 		}
 	}
 	return *this;
