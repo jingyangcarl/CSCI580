@@ -57,7 +57,7 @@ Input:
 Output:
 @ Matrix returnValue: a Matrix;
 */
-Matrix::Matrix(GzCoord vector) {
+Matrix::Matrix(const GzCoord& vector) {
 	this->row = 1;
 	this->col = 3;
 	this->data = new float* [this->row];
@@ -169,7 +169,7 @@ void Matrix::toGzCoord(GzCoord vector, bool normalize) {
 	if (col < 3) return;
 	if (normalize) {
 		float divider(0);
-		for (int i = 0; i < col; i++) divider += data[0][i] * data[0][i];
+		for (int i = 0; i < 3; i++) divider += data[0][i] * data[0][i];
 		for (int i = 0; i < 3; i++) vector[i] = data[0][i] / sqrt(divider);
 	}
 	else {

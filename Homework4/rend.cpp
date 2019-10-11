@@ -656,7 +656,10 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
 	GzColor colorMid = { 0.0f, 0.0f, 0.0f };
 	GzColor colorBot = { 0.0f, 0.0f, 0.0f };
-	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, normTop);
+	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, norm0);
+	colorGenerator.Generate();
+	colorGenerator.ToGzColor(this->flatcolor);
+	colorGenerator.setCurrentNorm(normTop);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorTop);
 	colorGenerator.setCurrentNorm(normMid);
@@ -700,9 +703,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			// calculate r, g, b
 			if (this->interp_mode == GZ_FLAT) {
 				// flat shading
-				this->flatcolor[0] = longEdge.getStartColor()[0];
-				this->flatcolor[1] = longEdge.getStartColor()[1];
-				this->flatcolor[2] = longEdge.getStartColor()[2];
+				//this->flatcolor[0] = this->flatcolor[0];
+				//this->flatcolor[1] = this->flatcolor[1];
+				//this->flatcolor[2] = this->flatcolor[2];
 			}
 			else if (this->interp_mode == GZ_COLOR) {
 				// Gouraud shading

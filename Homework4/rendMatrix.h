@@ -6,7 +6,7 @@ public:
 	Matrix();
 	Matrix(int row, int col, float value = 0);
 	Matrix(GzMatrix matrix);
-	Matrix(GzCoord vector);
+	Matrix(const GzCoord& vector);
 	Matrix(GzCoord vector, float fourth);
 
 	void InitEntries(int row, int col, float value = 0);
