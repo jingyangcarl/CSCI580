@@ -158,9 +158,15 @@ GzMatrix	rotateY =
 	* Select either GZ_COLOR or GZ_NORMALS as interpolation mode  
 	*/
         nameListShader[1]  = GZ_INTERPOLATE;
-#if 0
+
+#define PHONG
+#ifdef FLAT
+		interpStyle = GZ_FLAT;
+#endif
+#ifdef GOURAUD
         interpStyle = GZ_COLOR;         /* Gouraud shading */
-#else 
+#endif
+#ifdef PHONG
         interpStyle = GZ_NORMALS;       /* Phong shading */
 #endif
 

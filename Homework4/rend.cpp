@@ -506,7 +506,7 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 		case GZ_INTERPOLATE: {
 
 			// save interpolation mode
-			this->interp_mode = *(float*)(valueList[i]);
+			this->interp_mode = *(int*)(valueList[i]);
 
 		} break;
 		case GZ_DIRECTIONAL_LIGHT: {
@@ -664,19 +664,117 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
 		/*
 		Description:
-		This function is used to calculate color, normal and depth at given location;
+		This function is a lambda function defined to calculate color, normal and depth at given location;
 		Input:
 		@ int i: index i in the rendered image;
 		@ int j: index j in the rendered image;
 		@ DDA& shortEdge: the shorter edge of a triangle;
 		@ DDA& longEdge: the longest edge of a triangle;
+		@ int count: the counter used to accelerate
 		Output:
 		@ auto returnValue: an auto returnValue;
 		*/
-		auto Render = [this](int i, int j, DDA& shortEdge, DDA& longEdge) mutable {
-			float slopeZ = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+		auto Render = [this](const int i, const int j, DDA& shortEdge, DDA& longEdge) mutable {
+			/*
+			Description:
+			This function is a lambda function defined to calculate result color with given normal and ligths;
+			*/
+			auto ColorEquation = [this](GzCoord& normal, GzColor& outputColor) mutable {
+				GzColor specularColor = { 0.0f, 0.0f, 0.0f };
+				GzColor diffuseColor = { 0.0f, 0.0f, 0.0f };
+				GzColor ambientColor = { 0.0f, 0.0f, 0.0f };
+				GzColor resultColor = { 0.0f, 0.0f, 0.0f };
+				GzCoord eye = { 0.0f, 0.0f, -1.0f };
+				GzCoord reflection = { 0.0f, 0.0f, 0.0f };
+
+				// specular color
+				//Matrix specular(1, 3);
+				//for (int i = 0; i < this->numlights; i++) {
+				//	float nDotL = (Matrix(normal) * Matrix(lights[i].direction).transpose()).toFloat();
+				//	float nDotE = (Matrix(normal) * Matrix(eye).transpose()).toFloat();
+				//	(Matrix(normal) * (nDotL * 2) - Matrix(lights[i].direction)).normalize().toGzCoord(reflection);
+				//	float rDotE = (Matrix(reflection) * Matrix(eye).transpose()).toFloat();
+
+				//	if (nDotL > 0 && nDotE > 0) {
+				//		specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
+				//	}
+				//	else if (nDotL < 0 && nDotE < 0) {
+				//		// flip normal
+				//		specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
+				//	}
+				//	else {
+
+				//	}
+				//}
+				//(specular * this->Ks[0]).toGzColor(specularColor);
+
+				// diffuse color
+				Matrix diffuse(1, 3);
+				for (int i = 0; i < this->numlights; i++) {
+
+					float nDotL = (Matrix(normal) * Matrix(lights[i].direction).transpose()).toFloat();
+					float nDotE = (Matrix(normal) * Matrix(eye).transpose()).toFloat();
+
+					if (nDotL > 0 && nDotE > 0) {
+						diffuse += Matrix(lights[i].color) * nDotL;
+					}
+					else if (nDotL < 0 && nDotE < 0) {
+						diffuse += Matrix(lights[i].color) * -nDotL;
+					}
+					else {
+
+					}
+
+				}
+				(diffuse * this->Kd[0]).toGzColor(diffuseColor);
+
+				// ambient color
+				Matrix ambient(this->ambientlight.color);
+				(ambient * this->Ka[0]).toGzColor(ambientColor);
+
+				// Color
+				(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);
+				outputColor[0] = ctoi(resultColor[0]);
+				outputColor[1] = ctoi(resultColor[1]);
+				outputColor[2] = ctoi(resultColor[2]);
+			};
+
 			float deltaX = i - shortEdge.getCurrentVer()[0];
-			GzDepth z = slopeZ * deltaX + shortEdge.getCurrentVer()[2];
+			//float slopeRToX = (shortEdge.getCurrentColor()[0] - longEdge.getCurrentColor()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+			//float slopeGToX = (shortEdge.getCurrentColor()[1] - longEdge.getCurrentColor()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+			//float slopeBToX = (shortEdge.getCurrentColor()[2] - longEdge.getCurrentColor()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+			//float r = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
+			//float g = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
+			//float b = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
+
+			if (this->interp_mode == GZ_FLAT) {
+				// flat shading
+				GzCoord currentNormal = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
+				ColorEquation(currentNormal, this->flatcolor);
+			}
+			else if (this->interp_mode == GZ_COLOR) {
+				// Gouraud shading
+				//GzCoord normTop = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
+				//GzCoord normMid = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
+				//GzCoord normBot = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
+			}
+			else if (this->interp_mode == GZ_NORMALS) {
+				// Phong shading
+				float slopeNormXToX = (shortEdge.getCurrentNorm()[0] - longEdge.getCurrentNorm()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float slopeNormYToX = (shortEdge.getCurrentNorm()[1] - longEdge.getCurrentNorm()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float slopeNormZToX = (shortEdge.getCurrentNorm()[2] - longEdge.getCurrentNorm()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float currentNormX = slopeNormXToX * deltaX + shortEdge.getCurrentNorm()[0];
+				float currentNormY = slopeNormYToX * deltaX + shortEdge.getCurrentNorm()[1];
+				float currentNormZ = slopeNormZToX * deltaX + shortEdge.getCurrentNorm()[2];
+				GzCoord currentNormal = { currentNormX, currentNormY, currentNormZ };
+				ColorEquation(currentNormal, this->flatcolor);
+			}
+			else {
+
+			}
+
+			float slopeZToX = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+			GzDepth z = slopeZToX * deltaX + shortEdge.getCurrentVer()[2];
 			GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 		};
 
@@ -706,9 +804,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	// find L/R relationship to determine clockwise edges
 	// clockwise edges could be either top-bot-mid or top-mid-bot
 	// initialize DDAs for top-bot edge and top-mid edge
-	DDA ddaTopBot(verTop, verBot, false);
-	DDA ddaTopMid(verTop, verMid, true);
-	DDA ddaMidBot(verMid, verBot, true);
+	DDA ddaTopBot(verTop, verBot, normTop, normBot, false);
+	DDA ddaTopMid(verTop, verMid, normTop, normMid, true);
+	DDA ddaMidBot(verMid, verBot, normMid, normBot, true);
 
 	// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
 	float xShortEdge = verMid[0];
@@ -719,64 +817,64 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	ddaTopBot.MoveToNearestPixelLocation();
 
 	// calculate the color
-	GzColor specularColor = { 0.0f, 0.0f, 0.0f };
-	GzColor diffuseColor = { 0.0f, 0.0f, 0.0f };
-	GzColor ambientColor = { 0.0f, 0.0f, 0.0f };
-	GzColor resultColor = { 0.0f, 0.0f, 0.0f };
-	GzCoord eye = { 0.0f, 0.0f, -1.0f };
-	GzCoord reflection;
+	//GzColor specularColor = { 0.0f, 0.0f, 0.0f };
+	//GzColor diffuseColor = { 0.0f, 0.0f, 0.0f };
+	//GzColor ambientColor = { 0.0f, 0.0f, 0.0f };
+	//GzColor resultColor = { 0.0f, 0.0f, 0.0f };
+	//GzCoord eye = { 0.0f, 0.0f, -1.0f };
+	//GzCoord reflection;
 
-	// specular color
-	Matrix specular(1, 3);
-	for (int i = 0; i < this->numlights; i++) {
-		
-		float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
-		float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
-		(Matrix(norm0) * (nDotL * 2) - Matrix(lights[i].direction)).normalize().toGzCoord(reflection);
-		float rDotE = (Matrix(reflection) * Matrix(eye).transpose()).toFloat();
+	//// specular color
+	//Matrix specular(1, 3);
+	//for (int i = 0; i < this->numlights; i++) {
+	//	
+	//	float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+	//	float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
+	//	(Matrix(norm0) * (nDotL * 2) - Matrix(lights[i].direction)).normalize().toGzCoord(reflection);
+	//	float rDotE = (Matrix(reflection) * Matrix(eye).transpose()).toFloat();
 
-		if (nDotL > 0 && nDotE > 0) {
-			specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
-		}
-		else if (nDotL < 0 && nDotE < 0) {
-			// flip normal
-			specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
-		}
-		else {
+	//	if (nDotL > 0 && nDotE > 0) {
+	//		specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
+	//	}
+	//	else if (nDotL < 0 && nDotE < 0) {
+	//		// flip normal
+	//		specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
+	//	}
+	//	else {
 
-		}
-	}
-	(specular* this->Ks[0]).toGzColor(specularColor);
+	//	}
+	//}
+	//(specular* this->Ks[0]).toGzColor(specularColor);
 
-	// diffuse color
-	Matrix diffuse(1, 3);
-	for (int i = 0; i < this->numlights; i++) {
+	//// diffuse color
+	//Matrix diffuse(1, 3);
+	//for (int i = 0; i < this->numlights; i++) {
 
-		float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
-		float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
+	//	float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
+	//	float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
 
-		if (nDotL > 0 && nDotE > 0) {
-			diffuse += Matrix(lights[i].color) * nDotL;
-		}
-		else if (nDotL < 0 && nDotE < 0) {
-			diffuse += Matrix(lights[i].color) * -nDotL;
-		}
-		else {
+	//	if (nDotL > 0 && nDotE > 0) {
+	//		diffuse += Matrix(lights[i].color) * nDotL;
+	//	}
+	//	else if (nDotL < 0 && nDotE < 0) {
+	//		diffuse += Matrix(lights[i].color) * -nDotL;
+	//	}
+	//	else {
 
-		}
+	//	}
 
-	}
-	(diffuse * this->Kd[0]).toGzColor(diffuseColor);
+	//}
+	//(diffuse * this->Kd[0]).toGzColor(diffuseColor);
 
-	// ambient color
-	Matrix ambient(this->ambientlight.color);
-	(ambient * this->Ka[0]).toGzColor(ambientColor);
+	//// ambient color
+	//Matrix ambient(this->ambientlight.color);
+	//(ambient * this->Ka[0]).toGzColor(ambientColor);
 
-	// Color
-	(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);
-	this->flatcolor[0] = ctoi(resultColor[0]);
-	this->flatcolor[1] = ctoi(resultColor[1]);
-	this->flatcolor[2] = ctoi(resultColor[2]);
+	//// Color
+	//(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);
+	//this->flatcolor[0] = ctoi(resultColor[0]);
+	//this->flatcolor[1] = ctoi(resultColor[1]);
+	//this->flatcolor[2] = ctoi(resultColor[2]);
 
 	// if x < verMid[0], the short edge is on the left, or its on the left;
 	scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
