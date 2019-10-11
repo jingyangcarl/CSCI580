@@ -159,7 +159,7 @@ GzMatrix	rotateY =
 	*/
         nameListShader[1]  = GZ_INTERPOLATE;
 
-#define FLAT
+#define PHONG
 #ifdef FLAT
 		interpStyle = GZ_FLAT;
 #endif

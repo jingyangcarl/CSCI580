@@ -652,13 +652,15 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzCoord normMid = { vertexSorter.getNormMid()[0], vertexSorter.getNormMid()[1], vertexSorter.getNormMid()[2] };
 	GzCoord normBot = { vertexSorter.getNormBot()[0], vertexSorter.getNormBot()[1], vertexSorter.getNormBot()[2] };
 
-	// generate vertex color
-	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
-	GzColor colorMid = { 0.0f, 0.0f, 0.0f };
-	GzColor colorBot = { 0.0f, 0.0f, 0.0f };
+	// generate vertex color for flat shading
 	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, norm0);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(this->flatcolor);
+
+	// generate vertex color for Gouraud shading
+	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
+	GzColor colorMid = { 0.0f, 0.0f, 0.0f };
+	GzColor colorBot = { 0.0f, 0.0f, 0.0f };
 	colorGenerator.setCurrentNorm(normTop);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorTop);
@@ -703,9 +705,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			// calculate r, g, b
 			if (this->interp_mode == GZ_FLAT) {
 				// flat shading
-				//this->flatcolor[0] = this->flatcolor[0];
-				//this->flatcolor[1] = this->flatcolor[1];
-				//this->flatcolor[2] = this->flatcolor[2];
+
 			}
 			else if (this->interp_mode == GZ_COLOR) {
 				// Gouraud shading
@@ -731,12 +731,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			}
 
 			// project normalized color to 0-4096
-			flatcolor[0] = ctoi(flatcolor[0]);
-			flatcolor[1] = ctoi(flatcolor[1]);
-			flatcolor[2] = ctoi(flatcolor[2]);
+			float r = ctoi(flatcolor[0]);
+			float g = ctoi(flatcolor[1]);
+			float b = ctoi(flatcolor[2]);
 
 			// put pixel
-			GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
+			GzPut(i, j, r, g, b, 0, z);
 		};
 
 		// from the start line to the end line (along y)

@@ -455,23 +455,6 @@ Matrix& Matrix::operator*=(const Matrix& operand) {
 
 /*
 Description:
-This function is a overload of operator*= with a float number;
-Input:
-@ const Matrix& operand: a left hand operand;
-Output:
-@ Matrix& returnValue: a reference to the result;
-*/
-Matrix& Matrix::operator*=(const float operand) {
-	for (int i = 0; i < this->row; i++) {
-		for (int j = 0; j < this->col; j++) {
-			this->data[i][j] *= operand;
-		}
-	}
-	return *this;
-}
-
-/*
-Description:
 This function is a overload of operator* with a float number;
 Input:
 @ const float operand: a left hand operand;
@@ -486,6 +469,23 @@ Matrix& Matrix::operator*(const float operand) {
 		}
 	}
 	return *result;
+}
+
+/*
+Description:
+This function is a overload of operator*= with a float number;
+Input:
+@ const Matrix& operand: a left hand operand;
+Output:
+@ Matrix& returnValue: a reference to the result;
+*/
+Matrix& Matrix::operator*=(const float operand) {
+	for (int i = 0; i < this->row; i++) {
+		for (int j = 0; j < this->col; j++) {
+			this->data[i][j] *= operand;
+		}
+	}
+	return *this;
 }
 
 /*
