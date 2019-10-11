@@ -626,13 +626,30 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	projVer1.transpose().toGzCoord(ver1);
 	projVer2.transpose().toGzCoord(ver2);
 
+	// prepare norm0, norm1, and norm2;
+	GzCoord* normCoord = (GzCoord*)(valueList[1]);
+	GzCoord norm0 = { normCoord[0][0], normCoord[0][1], normCoord[0][2] };
+	GzCoord norm1 = { normCoord[1][0], normCoord[1][1], normCoord[1][2] };
+	GzCoord norm2 = { normCoord[2][0], normCoord[2][1], normCoord[2][2] };
+
+	// project norm0, norm1, and norm2 to model space;
+	Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
+	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
+	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
+	projNorm0.transpose().toGzCoord(norm0, true);
+	projNorm1.transpose().toGzCoord(norm1, true);
+	projNorm2.transpose().toGzCoord(norm2, true);
+
 	// vertex sorting
 	// sort ver1, ver2, ver3 to a low-to-height Y ordering
-	VertexSorter vertexSorter(ver0, ver1, ver2);
+	VertexSorter vertexSorter(ver0, ver1, ver2, norm0, norm1, norm2);
 	vertexSorter.Sort();
 	GzCoord verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
 	GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
 	GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
+	GzCoord normTop = { vertexSorter.getNormTop()[0], vertexSorter.getNormTop()[1], vertexSorter.getNormTop()[2] };
+	GzCoord normMid = { vertexSorter.getNormMid()[0], vertexSorter.getNormMid()[1], vertexSorter.getNormMid()[2] };
+	GzCoord normBot = { vertexSorter.getNormBot()[0], vertexSorter.getNormBot()[1], vertexSorter.getNormBot()[2] };
 
 	/*
 	Description:
@@ -645,7 +662,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	@ auto returnValue: an auto returnValue;
 	*/
 	auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
-
 		/*
 		Description:
 		This function is used to calculate color, normal and depth at given location;
@@ -658,25 +674,25 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		@ auto returnValue: an auto returnValue;
 		*/
 		auto Render = [this](int i, int j, DDA& shortEdge, DDA& longEdge) mutable {
-			float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
-			float deltaX = i - shortEdge.getCurrent()[0];
-			GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
+			float slopeZ = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+			float deltaX = i - shortEdge.getCurrentVer()[0];
+			GzDepth z = slopeZ * deltaX + shortEdge.getCurrentVer()[2];
 			GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 		};
 
 		// from the start line to the end line (along y)
-		for (int j = shortEdge.getCurrent()[1]; j >= ceil(shortEdge.getEnd()[1]); j--) {
+		for (int j = shortEdge.getCurrentVer()[1]; j >= ceil(shortEdge.getEndVer()[1]); j--) {
 			if (j < 0 || j > this->yres) continue;
 			// from the start pixel to the end pixel (along x)
 			if (isShortEdgeOnRight) {
 				// short edge is on the right of the long edge
-				for (int i = floor(shortEdge.getCurrent()[0]); i >= longEdge.getCurrent()[0]; i--) {
+				for (int i = floor(shortEdge.getCurrentVer()[0]); i >= longEdge.getCurrentVer()[0]; i--) {
 					Render(i, j, shortEdge, longEdge);
 				}
 			}
 			else {
 				// short edge is on the left of the long edge
-				for (int i = ceil(shortEdge.getCurrent()[0]); i <= longEdge.getCurrent()[0]; i++) {
+				for (int i = ceil(shortEdge.getCurrentVer()[0]); i <= longEdge.getCurrentVer()[0]; i++) {
 					Render(i, j, shortEdge, longEdge);
 				}
 			}
@@ -701,20 +717,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	// move current point of the long edge back for rendering
 	ddaTopBot.MoveReset();
 	ddaTopBot.MoveToNearestPixelLocation();
-
-	// prepare norm0, norm1, and norm2;
-	GzCoord* normCoord = (GzCoord*)(valueList[1]);
-	GzCoord norm0 = { normCoord[0][0], normCoord[0][1], normCoord[0][2] };
-	GzCoord norm1 = { normCoord[1][0], normCoord[1][1], normCoord[1][2] };
-	GzCoord norm2 = { normCoord[2][0], normCoord[2][1], normCoord[2][2] };
-
-	// project norm0, norm1, and norm2 to model space;
-	Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
-	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
-	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
-	projNorm0.transpose().toGzCoord(norm0, true);
-	projNorm1.transpose().toGzCoord(norm1, true);
-	projNorm2.transpose().toGzCoord(norm2, true);
 
 	// calculate the color
 	GzColor specularColor = { 0.0f, 0.0f, 0.0f };
@@ -770,7 +772,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	Matrix ambient(this->ambientlight.color);
 	(ambient * this->Ka[0]).toGzColor(ambientColor);
 
-	//// Color
+	// Color
 	(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);
 	this->flatcolor[0] = ctoi(resultColor[0]);
 	this->flatcolor[1] = ctoi(resultColor[1]);
