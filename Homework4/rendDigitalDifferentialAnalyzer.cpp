@@ -70,6 +70,11 @@ DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(const GzCoord& startVer
 	this->slopeRToY = (endColor[0] - startColor[0]) / (endVer[1] - startVer[1]);
 	this->slopeGToY = (endColor[1] - startColor[1]) / (endVer[1] - startVer[1]);
 	this->slopeBToY = (endColor[2] - startColor[2]) / (endVer[1] - startVer[1]);
+
+	if (initToScanLine) {
+		// move current points to nearest pixel scan line
+		MoveToNearestPixelLocation();
+	}
 }
 
 /*
