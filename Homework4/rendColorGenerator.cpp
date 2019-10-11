@@ -71,6 +71,12 @@ void ColorGenerator::Generate() {
 	(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(outputColor);
 }
 
+void ColorGenerator::setCurrentNorm(GzCoord normal) {
+	this->currentNorm[0] = normal[0];
+	this->currentNorm[1] = normal[1];
+	this->currentNorm[2] = normal[2];
+}
+
 void ColorGenerator::ToGzColor(GzColor outputColor) {
 	outputColor[0] = this->outputColor[0];
 	outputColor[1] = this->outputColor[1];

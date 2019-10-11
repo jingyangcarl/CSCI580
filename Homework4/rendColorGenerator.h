@@ -6,7 +6,7 @@ public:
 	ColorGenerator(int numLights, GzLight* lights, GzLight ambientLight, float Ka, float Kd, float Ks, float spec, GzCoord currentNorm);
 
 	void Generate();
-
+	void setCurrentNorm(GzCoord normal);
 	void ToGzColor(GzColor outputColor);
 
 private:

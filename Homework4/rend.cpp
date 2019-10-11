@@ -652,6 +652,20 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzCoord normMid = { vertexSorter.getNormMid()[0], vertexSorter.getNormMid()[1], vertexSorter.getNormMid()[2] };
 	GzCoord normBot = { vertexSorter.getNormBot()[0], vertexSorter.getNormBot()[1], vertexSorter.getNormBot()[2] };
 
+	// generate vertex color
+	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
+	GzColor colorMid = { 0.0f, 0.0f, 0.0f };
+	GzColor colorBot = { 0.0f, 0.0f, 0.0f };
+	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, normTop);
+	colorGenerator.Generate();
+	colorGenerator.ToGzColor(colorTop);
+	colorGenerator.setCurrentNorm(normMid);
+	colorGenerator.Generate();
+	colorGenerator.ToGzColor(colorMid);
+	colorGenerator.setCurrentNorm(normBot);
+	colorGenerator.Generate();
+	colorGenerator.ToGzColor(colorBot);
+
 	/*
 	Description:
 	This function is a lambda function defined to render pixels scan line by scan line from the short edge side to long edge side of a triangle by a top-down order;
@@ -681,14 +695,18 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 			if (this->interp_mode == GZ_FLAT) {
 				// flat shading
-				GzCoord currentNormal = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
-				ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, currentNormal);
-				colorGenerator.Generate();
-				colorGenerator.ToGzColor(this->flatcolor);
-				//ColorEquation(currentNormal, this->flatcolor);
+				this->flatcolor[0] = longEdge.getStartColor()[0];
+				this->flatcolor[1] = longEdge.getStartColor()[1];
+				this->flatcolor[2] = longEdge.getStartColor()[2];
 			}
 			else if (this->interp_mode == GZ_COLOR) {
 				// Gouraud shading
+				float slopeRToX = (shortEdge.getCurrentColor()[0] - longEdge.getCurrentColor()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float slopeGToX = (shortEdge.getCurrentColor()[1] - longEdge.getCurrentColor()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float slopeBToX = (shortEdge.getCurrentColor()[2] - longEdge.getCurrentColor()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				this->flatcolor[0] = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
+				this->flatcolor[1] = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
+				this->flatcolor[2] = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
 			}
 			else if (this->interp_mode == GZ_NORMALS) {
 				// Phong shading
@@ -738,9 +756,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	// find L/R relationship to determine clockwise edges
 	// clockwise edges could be either top-bot-mid or top-mid-bot
 	// initialize DDAs for top-bot edge and top-mid edge
-	DDA ddaTopBot(verTop, verBot, normTop, normBot, false);
-	DDA ddaTopMid(verTop, verMid, normTop, normMid, true);
-	DDA ddaMidBot(verMid, verBot, normMid, normBot, true);
+	DDA ddaTopBot(verTop, verBot, normTop, normBot, colorTop, colorBot, false);
+	DDA ddaTopMid(verTop, verMid, normTop, normMid, colorTop, colorMid, true);
+	DDA ddaMidBot(verMid, verBot, normMid, normBot, colorMid, colorBot, true);
 
 	// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
 	float xShortEdge = verMid[0];

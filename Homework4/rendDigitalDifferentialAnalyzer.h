@@ -5,7 +5,8 @@ class DigitalDifferentialAnalyzer {
 public:
 	DigitalDifferentialAnalyzer();
 	DigitalDifferentialAnalyzer(const GzCoord& startVer, const GzCoord& endVer, const bool initToScanLine);
-	DigitalDifferentialAnalyzer(const GzCoord& startVer, const GzCoord& endVer, const GzCoord startNorm, const GzCoord endNorm, const bool initToScanLine);
+	DigitalDifferentialAnalyzer(const GzCoord& startVer, const GzCoord& endVer, const GzCoord& startNorm, const GzCoord& endNorm, const bool initToScanLine);
+	DigitalDifferentialAnalyzer(const GzCoord& startVer, const GzCoord& endVer, const GzCoord& startNorm, const GzCoord& endNorm, const GzColor& startColor, const GzColor& endColor, const bool initToScanLine);
 
 	float* MoveY(const float deltaY);
 	float* MoveDownward();
