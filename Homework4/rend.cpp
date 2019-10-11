@@ -642,9 +642,28 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	@ DDA& longEdge: the longest edge of a triangle;
 	@ bool isShortEdgeOnRight: if the short edge is on the right of long edge;
 	Output:
-	@ auto returnValue: a auto returnValue;
+	@ auto returnValue: an auto returnValue;
 	*/
 	auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
+
+		/*
+		Description:
+		This function is used to calculate color, normal and depth at given location;
+		Input:
+		@ int i: index i in the rendered image;
+		@ int j: index j in the rendered image;
+		@ DDA& shortEdge: the shorter edge of a triangle;
+		@ DDA& longEdge: the longest edge of a triangle;
+		Output:
+		@ auto returnValue: an auto returnValue;
+		*/
+		auto Render = [this](int i, int j, DDA& shortEdge, DDA& longEdge) mutable {
+			float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
+			float deltaX = i - shortEdge.getCurrent()[0];
+			GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
+			GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
+		};
+
 		// from the start line to the end line (along y)
 		for (int j = shortEdge.getCurrent()[1]; j >= ceil(shortEdge.getEnd()[1]); j--) {
 			if (j < 0 || j > this->yres) continue;
@@ -652,19 +671,13 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			if (isShortEdgeOnRight) {
 				// short edge is on the right of the long edge
 				for (int i = floor(shortEdge.getCurrent()[0]); i >= longEdge.getCurrent()[0]; i--) {
-					float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
-					float deltaX = i - shortEdge.getCurrent()[0];
-					GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
+					Render(i, j, shortEdge, longEdge);
 				}
 			}
 			else {
 				// short edge is on the left of the long edge
 				for (int i = ceil(shortEdge.getCurrent()[0]); i <= longEdge.getCurrent()[0]; i++) {
-					float slopeZ = (shortEdge.getCurrent()[2] - longEdge.getCurrent()[2]) / (shortEdge.getCurrent()[0] - longEdge.getCurrent()[0]);
-					float deltaX = i - shortEdge.getCurrent()[0];
-					GzDepth z = slopeZ * deltaX + shortEdge.getCurrent()[2];
-					GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
+					Render(i, j, shortEdge, longEdge);
 				}
 			}
 			// move the current points to the next pixel line (scan line by scan line)
@@ -725,7 +738,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		}
 		else if (nDotL < 0 && nDotE < 0) {
 			// flip normal
-			specular += Matrix(lights[i].color) * pow(-rDotE, this->spec);
+			specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
 		}
 		else {
 
