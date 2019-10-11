@@ -195,49 +195,49 @@ This solution is to render a 2D teapot, where the teapot has to be transformed f
 ## Solution Hierarchy:
 ```
 ./Homework3
-©¦  Application.cpp
-©¦  Application.h
-©¦  Application3.cpp
-©¦  Application3.h
-©¦  Assignment3.doc
-©¦  CS580HW.cpp
-©¦  CS580HW.h
-©¦  CS580HW.rc
-©¦  CS580HW3.dsp
-©¦  CS580HW3.dsw
-©¦  CS580HW3.sln
-©¦  CS580HW3.vcxproj
-©¦  CS580HW3.vcxproj.filters
-©¦  CS580HW3.vcxproj.user
-©¦  CS580HWDoc.cpp
-©¦  CS580HWDoc.h
-©¦  CS580HWView.cpp
-©¦  CS580HWView.h
-©¦  gz.h
-©¦  MainFrm.cpp
-©¦  MainFrm.h
-©¦  pot4.asc
-©¦  README.md
-©¦  rend.cpp
-©¦  rend.h
-©¦  rendDigitalDifferentialAnalyzer.cpp
-©¦  rendDigitalDifferentialAnalyzer.h
-©¦  rendMatrix.cpp
-©¦  rendMatrix.h
-©¦  rendVertexSorter.cpp
-©¦  rendVertexSorter.h
-©¦  resource.h
-©¦  RotateDlg.cpp
-©¦  RotateDlg.h
-©¦  ScaleDlg.cpp
-©¦  ScaleDlg.h
-©¦  StdAfx.cpp
-©¦  StdAfx.h
-©¦  TranslateDlg.cpp
-©¦  TranslateDlg.h
-©¦  tri.asc
-©¦
-©¸©¤res
+â”‚  Application.cpp
+â”‚  Application.h
+â”‚  Application3.cpp
+â”‚  Application3.h
+â”‚  Assignment3.doc
+â”‚  CS580HW.cpp
+â”‚  CS580HW.h
+â”‚  CS580HW.rc
+â”‚  CS580HW3.dsp
+â”‚  CS580HW3.dsw
+â”‚  CS580HW3.sln
+â”‚  CS580HW3.vcxproj
+â”‚  CS580HW3.vcxproj.filters
+â”‚  CS580HW3.vcxproj.user
+â”‚  CS580HWDoc.cpp
+â”‚  CS580HWDoc.h
+â”‚  CS580HWView.cpp
+â”‚  CS580HWView.h
+â”‚  gz.h
+â”‚  MainFrm.cpp
+â”‚  MainFrm.h
+â”‚  pot4.asc
+â”‚  README.md
+â”‚  rend.cpp
+â”‚  rend.h
+â”‚  rendDigitalDifferentialAnalyzer.cpp
+â”‚  rendDigitalDifferentialAnalyzer.h
+â”‚  rendMatrix.cpp
+â”‚  rendMatrix.h
+â”‚  rendVertexSorter.cpp
+â”‚  rendVertexSorter.h
+â”‚  resource.h
+â”‚  RotateDlg.cpp
+â”‚  RotateDlg.h
+â”‚  ScaleDlg.cpp
+â”‚  ScaleDlg.h
+â”‚  StdAfx.cpp
+â”‚  StdAfx.h
+â”‚  TranslateDlg.cpp
+â”‚  TranslateDlg.h
+â”‚  tri.asc
+â”‚
+â””â”€res
         CS580HW.ico
         CS580HW.rc2
         CS580HWDoc.ico
