@@ -750,72 +750,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	ddaTopBot.MoveReset();
 	ddaTopBot.MoveToNearestPixelLocation();
 
-	// calculate the color
-	//GzColor specularColor = { 0.0f, 0.0f, 0.0f };
-	//GzColor diffuseColor = { 0.0f, 0.0f, 0.0f };
-	//GzColor ambientColor = { 0.0f, 0.0f, 0.0f };
-	//GzColor resultColor = { 0.0f, 0.0f, 0.0f };
-	//GzCoord eye = { 0.0f, 0.0f, -1.0f };
-	//GzCoord reflection;
-
-	//// specular color
-	//Matrix specular(1, 3);
-	//for (int i = 0; i < this->numlights; i++) {
-	//	
-	//	float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
-	//	float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
-	//	(Matrix(norm0) * (nDotL * 2) - Matrix(lights[i].direction)).normalize().toGzCoord(reflection);
-	//	float rDotE = (Matrix(reflection) * Matrix(eye).transpose()).toFloat();
-
-	//	if (nDotL > 0 && nDotE > 0) {
-	//		specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
-	//	}
-	//	else if (nDotL < 0 && nDotE < 0) {
-	//		// flip normal
-	//		specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
-	//	}
-	//	else {
-
-	//	}
-	//}
-	//(specular* this->Ks[0]).toGzColor(specularColor);
-
-	//// diffuse color
-	//Matrix diffuse(1, 3);
-	//for (int i = 0; i < this->numlights; i++) {
-
-	//	float nDotL = (Matrix(norm0) * Matrix(lights[i].direction).transpose()).toFloat();
-	//	float nDotE = (Matrix(norm0) * Matrix(eye).transpose()).toFloat();
-
-	//	if (nDotL > 0 && nDotE > 0) {
-	//		diffuse += Matrix(lights[i].color) * nDotL;
-	//	}
-	//	else if (nDotL < 0 && nDotE < 0) {
-	//		diffuse += Matrix(lights[i].color) * -nDotL;
-	//	}
-	//	else {
-
-	//	}
-
-	//}
-	//(diffuse * this->Kd[0]).toGzColor(diffuseColor);
-
-	//// ambient color
-	//Matrix ambient(this->ambientlight.color);
-	//(ambient * this->Ka[0]).toGzColor(ambientColor);
-
-	//// Color
-	//(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);
-	//this->flatcolor[0] = ctoi(resultColor[0]);
-	//this->flatcolor[1] = ctoi(resultColor[1]);
-	//this->flatcolor[2] = ctoi(resultColor[2]);
-
 	// if x < verMid[0], the short edge is on the left, or its on the left;
 	scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
 	scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
 
 	return GZ_SUCCESS;
-
-	
 }
-
