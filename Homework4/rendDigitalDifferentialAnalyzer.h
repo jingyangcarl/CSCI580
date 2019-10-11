@@ -22,8 +22,6 @@ public:
 	float* getStartColor();
 	float* getEndColor();
 	float* getCurrentColor();
-	float getSlopeXToY() const;
-	float getSlopeZToY() const;
 
 private:
 	GzCoord startVer; GzCoord endVer; GzCoord currentVer;

@@ -693,6 +693,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 			float deltaX = i - shortEdge.getCurrentVer()[0];
 
+			// calculate z
+			float slopeZToX = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+			GzDepth z = slopeZToX * deltaX + shortEdge.getCurrentVer()[2];
+
+			// calculate r, g, b
 			if (this->interp_mode == GZ_FLAT) {
 				// flat shading
 				this->flatcolor[0] = longEdge.getStartColor()[0];
@@ -722,11 +727,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				colorGenerator.ToGzColor(this->flatcolor);
 			}
 
-			float slopeZToX = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-			GzDepth z = slopeZToX * deltaX + shortEdge.getCurrentVer()[2];
+			// project normalized color to 0-4096
 			flatcolor[0] = ctoi(flatcolor[0]);
 			flatcolor[1] = ctoi(flatcolor[1]);
 			flatcolor[2] = ctoi(flatcolor[2]);
+
+			// put pixel
 			GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 		};
 

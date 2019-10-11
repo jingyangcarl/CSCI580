@@ -97,7 +97,7 @@ GzMatrix	rotateY =
 	0.0,	0.0,	0.0,	1.0 
 }; 
 
-#if 1 	/* set up app-defined camera if desired, else use camera defaults */
+#if 0 	/* set up app-defined camera if desired, else use camera defaults */
 	camera.position[X] = 13.2;      
   	camera.position[Y] = -8.7;
   	camera.position[Z] = -14.8;
@@ -159,7 +159,7 @@ GzMatrix	rotateY =
 	*/
         nameListShader[1]  = GZ_INTERPOLATE;
 
-#define GOURAUD
+#define PHONG
 #ifdef FLAT
 		interpStyle = GZ_FLAT;
 #endif

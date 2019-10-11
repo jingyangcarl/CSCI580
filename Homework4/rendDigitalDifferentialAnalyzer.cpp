@@ -298,27 +298,3 @@ Output:
 float* DigitalDifferentialAnalyzer::getCurrentColor() {
 	return this->currentColor;
 }
-
-/*
-Description:
-This function is used to return a slope of deltaX/deltaY;
-Input:
-@ void parameter: void;
-Output:
-@ float returnValue: a slope of deltaX/deltaY;
-*/
-float DigitalDifferentialAnalyzer::getSlopeXToY() const {
-	return this->slopeXToY;
-}
-
-/*
-Description:
-This function is used to return a slope of deltaZ/deltaY;
-Input:
-@ void parameter: void;
-Output:
-@ float returnValue: a slope of deltaZ/deltaY;
-*/
-float DigitalDifferentialAnalyzer::getSlopeZToY() const {
-	return this->slopeZToY;
-}
