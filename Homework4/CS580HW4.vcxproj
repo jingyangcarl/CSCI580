@@ -139,6 +139,7 @@
     <ClCompile Include="CS580HWView.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="rend.cpp" />
+    <ClCompile Include="rendColorGenerator.cpp" />
     <ClCompile Include="rendDigitalDifferentialAnalyzer.cpp" />
     <ClCompile Include="rendMatrix.cpp" />
     <ClCompile Include="rendVertexSorter.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="gz.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="rend.h" />
+    <ClInclude Include="rendColorGenerator.h" />
     <ClInclude Include="rendDigitalDifferentialAnalyzer.h" />
     <ClInclude Include="rendMatrix.h" />
     <ClInclude Include="rendVertexSorter.h" />

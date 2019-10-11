@@ -57,6 +57,9 @@
     <ClCompile Include="rendVertexSorter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="rendColorGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CS580HW.rc">
@@ -110,6 +113,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rendVertexSorter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rendColorGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

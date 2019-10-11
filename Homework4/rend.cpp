@@ -11,6 +11,7 @@
 #include	"rendVertexSorter.h"
 #include	"rendDigitalDifferentialAnalyzer.h"
 #include	"rendMatrix.h"
+#include	"rendColorGenerator.h"
 
 #define PI (float) 3.14159265358979323846
 
@@ -675,88 +676,19 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		@ auto returnValue: an auto returnValue;
 		*/
 		auto Render = [this](const int i, const int j, DDA& shortEdge, DDA& longEdge) mutable {
-			/*
-			Description:
-			This function is a lambda function defined to calculate result color with given normal and ligths;
-			*/
-			auto ColorEquation = [this](GzCoord& normal, GzColor& outputColor) mutable {
-				GzColor specularColor = { 0.0f, 0.0f, 0.0f };
-				GzColor diffuseColor = { 0.0f, 0.0f, 0.0f };
-				GzColor ambientColor = { 0.0f, 0.0f, 0.0f };
-				GzColor resultColor = { 0.0f, 0.0f, 0.0f };
-				GzCoord eye = { 0.0f, 0.0f, -1.0f };
-				GzCoord reflection = { 0.0f, 0.0f, 0.0f };
-
-				// specular color
-				//Matrix specular(1, 3);
-				//for (int i = 0; i < this->numlights; i++) {
-				//	float nDotL = (Matrix(normal) * Matrix(lights[i].direction).transpose()).toFloat();
-				//	float nDotE = (Matrix(normal) * Matrix(eye).transpose()).toFloat();
-				//	(Matrix(normal) * (nDotL * 2) - Matrix(lights[i].direction)).normalize().toGzCoord(reflection);
-				//	float rDotE = (Matrix(reflection) * Matrix(eye).transpose()).toFloat();
-
-				//	if (nDotL > 0 && nDotE > 0) {
-				//		specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
-				//	}
-				//	else if (nDotL < 0 && nDotE < 0) {
-				//		// flip normal
-				//		specular += Matrix(lights[i].color) * pow(rDotE, this->spec);
-				//	}
-				//	else {
-
-				//	}
-				//}
-				//(specular * this->Ks[0]).toGzColor(specularColor);
-
-				// diffuse color
-				Matrix diffuse(1, 3);
-				for (int i = 0; i < this->numlights; i++) {
-
-					float nDotL = (Matrix(normal) * Matrix(lights[i].direction).transpose()).toFloat();
-					float nDotE = (Matrix(normal) * Matrix(eye).transpose()).toFloat();
-
-					if (nDotL > 0 && nDotE > 0) {
-						diffuse += Matrix(lights[i].color) * nDotL;
-					}
-					else if (nDotL < 0 && nDotE < 0) {
-						diffuse += Matrix(lights[i].color) * -nDotL;
-					}
-					else {
-
-					}
-
-				}
-				(diffuse * this->Kd[0]).toGzColor(diffuseColor);
-
-				// ambient color
-				Matrix ambient(this->ambientlight.color);
-				(ambient * this->Ka[0]).toGzColor(ambientColor);
-
-				// Color
-				(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(resultColor);
-				outputColor[0] = ctoi(resultColor[0]);
-				outputColor[1] = ctoi(resultColor[1]);
-				outputColor[2] = ctoi(resultColor[2]);
-			};
 
 			float deltaX = i - shortEdge.getCurrentVer()[0];
-			//float slopeRToX = (shortEdge.getCurrentColor()[0] - longEdge.getCurrentColor()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-			//float slopeGToX = (shortEdge.getCurrentColor()[1] - longEdge.getCurrentColor()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-			//float slopeBToX = (shortEdge.getCurrentColor()[2] - longEdge.getCurrentColor()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-			//float r = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
-			//float g = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
-			//float b = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
 
 			if (this->interp_mode == GZ_FLAT) {
 				// flat shading
 				GzCoord currentNormal = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
-				ColorEquation(currentNormal, this->flatcolor);
+				ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, currentNormal);
+				colorGenerator.Generate();
+				colorGenerator.ToGzColor(this->flatcolor);
+				//ColorEquation(currentNormal, this->flatcolor);
 			}
 			else if (this->interp_mode == GZ_COLOR) {
 				// Gouraud shading
-				//GzCoord normTop = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
-				//GzCoord normMid = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
-				//GzCoord normBot = { longEdge.getStartNorm()[0], longEdge.getStartNorm()[1], longEdge.getStartNorm()[2] };
 			}
 			else if (this->interp_mode == GZ_NORMALS) {
 				// Phong shading
@@ -767,14 +699,16 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				float currentNormY = slopeNormYToX * deltaX + shortEdge.getCurrentNorm()[1];
 				float currentNormZ = slopeNormZToX * deltaX + shortEdge.getCurrentNorm()[2];
 				GzCoord currentNormal = { currentNormX, currentNormY, currentNormZ };
-				ColorEquation(currentNormal, this->flatcolor);
-			}
-			else {
-
+				ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, currentNormal);
+				colorGenerator.Generate();
+				colorGenerator.ToGzColor(this->flatcolor);
 			}
 
 			float slopeZToX = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
 			GzDepth z = slopeZToX * deltaX + shortEdge.getCurrentVer()[2];
+			flatcolor[0] = ctoi(flatcolor[0]);
+			flatcolor[1] = ctoi(flatcolor[1]);
+			flatcolor[2] = ctoi(flatcolor[2]);
 			GzPut(i, j, flatcolor[0], flatcolor[1], flatcolor[2], 0, z);
 		};
 
