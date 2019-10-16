@@ -765,7 +765,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 		// from the start line to the end line (along y)
 		for (int j = shortEdge.getCurrentVer()[1]; j >= ceil(shortEdge.getEndVer()[1]); j--) {
-			if (j < 0 || j > this->yres) continue;
+			if (j < 0 || j > this->yres) {
+				// skip the line and move current points down to the next pixel line;
+				shortEdge.MoveDownward();
+				longEdge.MoveDownward();
+				continue;
+			}
 			// from the start pixel to the end pixel (along x)
 			if (isShortEdgeOnRight) {
 				// short edge is on the right of the long edge
@@ -801,7 +806,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	ddaTopBot.MoveReset();
 	ddaTopBot.MoveToNearestPixelLocation();
 
-	// if x < verMid[0], the short edge is on the left, or its on the left;
+	// if x < verMid[0], the short edge is on the left, or its on the right;
 	scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
 	scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
 

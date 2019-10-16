@@ -68,7 +68,6 @@ public:
 	inline int ARRAY(int x, int y){return (x+y*xres);}	/* simplify fbuf indexing */
 	inline short	ctoi(float color) {return(short)((int)(color * ((1 << 12) - 1)));}		/* convert float color to GzIntensity short */
 
-
 	// Object Translation
 	int GzRotXMat(float degree, GzMatrix mat);
 	int GzRotYMat(float degree, GzMatrix mat);
