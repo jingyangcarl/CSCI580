@@ -51,11 +51,6 @@ int tex_fun(float u, float v, GzColor color)
 	// bilinear interpolation
 	float x = (xs - 1) * u;
 	float y = (ys - 1) * v;
-	
-	//int indexA = int(floor(x) * ys + floor(y));
-	//int indexB = int(floor(x) * ys + ceil(y));
-	//int indexC = int(ceil(x) * ys +  floor(y));
-	//int indexD = int(ceil(x) * ys + ceil(y));
 
 	int indexA = int(floor(y) * xs + floor(x));
 	int indexB = int(floor(y) * xs + ceil(x));

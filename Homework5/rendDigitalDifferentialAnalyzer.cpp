@@ -85,7 +85,8 @@ Input:
 @ const GzCoord& endVer: a end point;
 @ const GzCoord& startNorm: the start point's normal vector;
 @ const GzCoord& endNorm: the end point's normal vector;
-@ const 
+@ const GzColor& startColor: the start points' color;
+@ const GzColor& endColor: the end points' color;
 @ const bool initToScanLine: if put the current point to the nearest pixel line;
 Output:
 @ DigitalDifferentialAnalyzer returnValue: a DigitalDifferentialAnalyzer;
@@ -121,6 +122,58 @@ DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(const GzCoord& startVer
 
 /*
 Description:
+This function is a constructor;
+Input:
+@ const GzCoord& startVer: a start point;
+@ const GzCoord& endVer: a end point;
+@ const GzCoord& startNorm: the start point's normal vector;
+@ const GzCoord& endNorm: the end point's normal vector;
+@ const GzColor& startColor: the start points' color;
+@ const GzColor& endColor: the end points' color;
+@ const GzTextureIndex& startUV: the start points' texture uv;
+@ const GzTextureIndex& endUV: the end point's texture uv;
+@ const bool initToScanLine: if put the current point to the nearest pixel line;
+Output:
+@ DigitalDifferentialAnalyzer returnValue: a DigitalDifferentialAnalyzer;
+*/
+DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(const GzCoord& startVer, const GzCoord& endVer, const GzCoord& startNorm, const GzCoord& endNorm, const GzColor& startColor, const GzColor& endColor, const GzTextureIndex& startUV, const GzTextureIndex& endUV, const bool initToScanLine) {
+	// init vertices
+	this->startVer[0] = startVer[0]; this->startVer[1] = startVer[1]; this->startVer[2] = startVer[2];
+	this->endVer[0] = endVer[0]; this->endVer[1] = endVer[1]; this->endVer[2] = endVer[2];
+	this->currentVer[0] = startVer[0]; this->currentVer[1] = startVer[1]; this->currentVer[2] = startVer[2];
+	// init normals
+	this->startNorm[0] = startNorm[0]; this->startNorm[1] = startNorm[1]; this->startNorm[2] = startNorm[2];
+	this->endNorm[0] = endNorm[0]; this->endNorm[1] = endNorm[1]; this->endNorm[2] = endNorm[2];
+	this->currentNorm[0] = startNorm[0]; this->currentNorm[1] = startNorm[1]; this->currentNorm[2] = startNorm[2];
+	// init colors
+	this->startColor[0] = startColor[0]; this->startColor[1] = startColor[1]; this->startColor[2] = startColor[2];
+	this->endColor[0] = endColor[0]; this->endColor[1] = endColor[1]; this->endColor[2] = endColor[2];
+	this->currentColor[0] = startColor[0]; this->currentColor[1] = startColor[1]; this->currentColor[2] = startColor[2];
+	// init uvs
+	this->startUV[0] = startUV[0]; this->startUV[1] = startUV[1];
+	this->endUV[0] = endUV[0]; this->endUV[1] = endUV[1];
+	this->currentUV[0] = currentUV[0]; this->currentUV[1] = currentUV[1];
+
+	// init slopes
+	this->slopeXToY = (endVer[0] - startVer[0]) / (endVer[1] - startVer[1]);
+	this->slopeZToY = (endVer[2] - startVer[2]) / (endVer[1] - startVer[1]);
+	this->slopeNormXToY = (endNorm[0] - startNorm[0]) / (endVer[1] - startVer[1]);
+	this->slopeNormYToY = (endNorm[1] - startNorm[1]) / (endVer[1] - startVer[1]);
+	this->slopeNormZToY = (endNorm[2] - startNorm[2]) / (endVer[1] - startVer[1]);
+	this->slopeRToY = (endColor[0] - startColor[0]) / (endVer[1] - startVer[1]);
+	this->slopeGToY = (endColor[1] - startColor[1]) / (endVer[1] - startVer[1]);
+	this->slopeBToY = (endColor[2] - startColor[2]) / (endVer[1] - startVer[1]);
+	this->slopeUtoY = (endUV[0] - startUV[0]) / (endVer[1] - startVer[1]);
+	this->slopeVtoY = (endUV[1] - startUV[1]) / (endVer[1] - startVer[1]);
+
+	if (initToScanLine) {
+		// move current points to nearest pixel scan line
+		MoveToNearestPixelLocation();
+	}
+}
+
+/*
+Description:
 This function is used to move current point, defined as a member variable, along the edge from the start point to the end point by deltaY;
 Input:
 @ const float deltaY: a moving distance along y axis;
@@ -140,6 +193,9 @@ float* DigitalDifferentialAnalyzer::MoveY(const float deltaY) {
 	this->currentColor[0] += deltaY ? slopeRToY * deltaY : 0;
 	this->currentColor[1] += deltaY ? slopeGToY * deltaY : 0;
 	this->currentColor[2] += deltaY ? slopeBToY * deltaY : 0;
+	// move current UV
+	this->currentUV[0] += deltaY ? slopeUtoY * deltaY : 0;
+	this->currentUV[1] += deltaY ? slopeVtoY * deltaY : 0;
 
 	return this->currentVer;
 }
@@ -189,6 +245,9 @@ void DigitalDifferentialAnalyzer::MoveReset() {
 	this->currentColor[0] = startColor[0];
 	this->currentColor[1] = startColor[1];
 	this->currentColor[2] = startColor[2];
+	// reset uv
+	this->currentUV[0] = startUV[0];
+	this->currentUV[1] = startUV[1];
 }
 
 /*
@@ -297,4 +356,40 @@ Output:
 */
 float* DigitalDifferentialAnalyzer::getCurrentColor() {
 	return this->currentColor;
+}
+
+/*
+Description:
+This function is used to return the uv coordinates of the start point;
+Input:
+@ void parameter: void;
+Output:
+@ float* returnValue: uv coordinates of the start point;
+*/
+float* DigitalDifferentialAnalyzer::getStartUV() {
+	return this->startUV;
+}
+
+/*
+Description:
+This function is used to return the uv coordinates of the end point;
+Input:
+@ void parameter: void;
+Output:
+@ float* returnValue: uv coordinates of the end point;
+*/
+float* DigitalDifferentialAnalyzer::getEndUV() {
+	return this->endUV;
+}
+
+/*
+Description:
+This function is used to return the uv coordinates of the current point;
+Input:
+@ void parameter: void;
+Output:
+@ float* returnValue: uv coordinates of the current point;
+*/
+float* DigitalDifferentialAnalyzer::getCurrentUV() {
+	return this->currentUV;
 }

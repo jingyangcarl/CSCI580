@@ -768,8 +768,16 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				float currentNormX = slopeNormXToX * deltaX + shortEdge.getCurrentNorm()[0];
 				float currentNormY = slopeNormYToX * deltaX + shortEdge.getCurrentNorm()[1];
 				float currentNormZ = slopeNormZToX * deltaX + shortEdge.getCurrentNorm()[2];
+
+				float slopeUtoX = (shortEdge.getCurrentUV()[0] - longEdge.getCurrentUV()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float slopeVtoX = (shortEdge.getCurrentUV()[1] - longEdge.getCurrentUV()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float currentU = slopeUtoX * deltaX + shortEdge.getCurrentUV()[0];
+				float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
+
 				GzCoord currentNormal = { currentNormX, currentNormY, currentNormZ };
-				ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, currentNormal);
+				GzColor K = { 0.0f, 0.0f, 0.0f };
+				this->tex_fun(currentU, currentV, K);
+				ColorGenerator colorGenerator(numlights, lights, ambientlight, K[0], K[1], Ks[0], spec, currentNormal);
 				colorGenerator.Generate();
 				colorGenerator.ToGzColor(this->flatcolor);
 			}
@@ -814,9 +822,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	// find L/R relationship to determine clockwise edges
 	// clockwise edges could be either top-bot-mid or top-mid-bot
 	// initialize DDAs for top-bot edge and top-mid edge
-	DDA ddaTopBot(verTop, verBot, normTop, normBot, colorTop, colorBot, false);
-	DDA ddaTopMid(verTop, verMid, normTop, normMid, colorTop, colorMid, true);
-	DDA ddaMidBot(verMid, verBot, normMid, normBot, colorMid, colorBot, true);
+	DDA ddaTopBot(verTop, verBot, normTop, normBot, colorTop, colorBot, uvTop, uvBot, false);
+	DDA ddaTopMid(verTop, verMid, normTop, normMid, colorTop, colorMid, uvTop, uvMid, true);
+	DDA ddaMidBot(verMid, verBot, normMid, normBot, colorMid, colorBot, uvMid, uvBot, true);
 
 	// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
 	float xShortEdge = verMid[0];
