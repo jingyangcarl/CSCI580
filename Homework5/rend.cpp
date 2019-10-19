@@ -676,7 +676,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 	// vertex sorting
 	// sort ver1, ver2, ver3 to a low-to-height Y ordering
-	VertexSorter vertexSorter(ver0, ver1, ver2, norm0, norm1, norm2);
+	VertexSorter vertexSorter(ver0, ver1, ver2, norm0, norm1, norm2, uv0, uv1, uv2);
 	vertexSorter.Sort();
 	GzCoord verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
 	GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };

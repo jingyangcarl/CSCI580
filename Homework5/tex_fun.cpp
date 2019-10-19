@@ -49,15 +49,27 @@ int tex_fun(float u, float v, GzColor color)
 	v = v < 0 ? 0 : (v > 1 ? 1 : v);
 
 	// bilinear interpolation
-	int x = xs * u - 1;
-	int y = ys * v - 1;
+	float x = xs * u;
+	float y = ys * v;
 	
 	int indexA = int(floor(x) * xs + floor(y));
 	int indexB = int(floor(x) * xs + ceil(y));
 	int indexC = int(ceil(x) * xs +  floor(y));
 	int indexD = int(ceil(x) * xs + ceil(y));
 	GzColor colorA = { image[indexA][RED], image[indexA][GREEN], image[indexA][BLUE] };
+	GzColor colorB = { image[indexB][RED], image[indexB][GREEN], image[indexB][BLUE] };
+	GzColor colorC = { image[indexC][RED], image[indexC][GREEN], image[indexC][BLUE] };
+	GzColor colorD = { image[indexD][RED], image[indexD][GREEN], image[indexD][BLUE] };
 
+	float s = x - floor(x);
+	float t = y - floor(y);
+	float r = s * t * colorC[0] + (1 - s) * t * colorD[0] + s * (1 - t) * colorB[0] + (1 - s) * (1 - t) * colorA[0];
+	float g = s * t * colorC[1] + (1 - s) * t * colorD[1] + s * (1 - t) * colorB[1] + (1 - s) * (1 - t) * colorA[1];
+	float b = s * t * colorC[2] + (1 - s) * t * colorD[2] + s * (1 - t) * colorB[2] + (1 - s) * (1 - t) * colorA[2];
+
+	color[0] = r;
+	color[1] = g;
+	color[2] = b;
 
 	return GZ_SUCCESS;
 }

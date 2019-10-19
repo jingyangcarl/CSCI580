@@ -83,8 +83,8 @@ VertexSorter::VertexSorter(const GzCoord& ver0, const GzCoord& ver1, const GzCoo
 	this->norm1[0] = norm1[0]; this->norm1[1] = norm1[1]; this->norm1[2] = norm1[2];
 	this->norm2[0] = norm2[0]; this->norm2[1] = norm2[1]; this->norm2[2] = norm2[2];
 	this->uv0[0] = uv0[0]; this->uv0[1] = uv0[1];
-	this->uv1[0] = uv0[0]; this->uv1[1] = uv0[1];
-	this->uv2[0] = uv0[0]; this->uv2[1] = uv0[1];
+	this->uv1[0] = uv1[0]; this->uv1[1] = uv1[1];
+	this->uv2[0] = uv2[0]; this->uv2[1] = uv2[1];
 	this->verTop[0] = 0.0f; this->verTop[1] = 0.0f; this->verTop[2] = 0.0f;
 	this->verBot[0] = 0.0f; this->verBot[1] = 0.0f; this->verBot[2] = 0.0f;
 	this->verMid[0] = 0.0f; this->verMid[1] = 0.0f; this->verMid[2] = 0.0f;
