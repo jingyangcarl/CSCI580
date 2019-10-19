@@ -152,7 +152,7 @@ DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(const GzCoord& startVer
 	// init uvs
 	this->startUV[0] = startUV[0]; this->startUV[1] = startUV[1];
 	this->endUV[0] = endUV[0]; this->endUV[1] = endUV[1];
-	this->currentUV[0] = currentUV[0]; this->currentUV[1] = currentUV[1];
+	this->currentUV[0] = startUV[0]; this->currentUV[1] = startUV[1];
 
 	// init slopes
 	this->slopeXToY = (endVer[0] - startVer[0]) / (endVer[1] - startVer[1]);
