@@ -18,7 +18,6 @@
 #define	MAX_LIGHTS	10		/* how many lights allowed */
 
 class GzRender{			/* define a renderer */
-  
 
 public:
 	unsigned short	xres;

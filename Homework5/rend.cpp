@@ -602,6 +602,9 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			this->spec = *(float*)(valueList[i]);
 
 		} break;
+		case GZ_TEXTURE_MAP: {
+			this->tex_fun = *(GzTexture)(valueList[i]);
+		} break;
 		}
 	}
 
@@ -665,6 +668,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	projNorm1.transpose().toGzCoord(norm1, true);
 	projNorm2.transpose().toGzCoord(norm2, true);
 
+	// prepare uv0, uv1, vu2;
+	GzTextureIndex* uvCoord = (GzTextureIndex*)(valueList[2]);
+	GzTextureIndex uv0 = { uvCoord[0][0], uvCoord[0][1] };
+	GzTextureIndex uv1 = { uvCoord[1][0], uvCoord[1][1] };
+	GzTextureIndex uv2 = { uvCoord[2][0], uvCoord[2][1] };
+
 	// vertex sorting
 	// sort ver1, ver2, ver3 to a low-to-height Y ordering
 	VertexSorter vertexSorter(ver0, ver1, ver2, norm0, norm1, norm2);
@@ -675,6 +684,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzCoord normTop = { vertexSorter.getNormTop()[0], vertexSorter.getNormTop()[1], vertexSorter.getNormTop()[2] };
 	GzCoord normMid = { vertexSorter.getNormMid()[0], vertexSorter.getNormMid()[1], vertexSorter.getNormMid()[2] };
 	GzCoord normBot = { vertexSorter.getNormBot()[0], vertexSorter.getNormBot()[1], vertexSorter.getNormBot()[2] };
+	GzTextureIndex uvTop = { vertexSorter.getUVTop()[0], vertexSorter.getUVTop()[1] };
+	GzTextureIndex uvMid = { vertexSorter.getUVMid()[0], vertexSorter.getUVMid()[1] };
+	GzTextureIndex uvBot = { vertexSorter.getUVBot()[0], vertexSorter.getUVBot()[1] };
 
 	// generate vertex color for flat shading
 	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, norm0);
@@ -694,6 +706,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	colorGenerator.setCurrentNorm(normBot);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorBot);
+
+	// read color from uv map
+	this->tex_fun(uvTop[0], uvTop[1], colorTop);
+	this->tex_fun(uvMid[0], uvMid[1], colorMid);
+	this->tex_fun(uvBot[0], uvBot[1], colorBot);
 
 	/*
 	Description:
