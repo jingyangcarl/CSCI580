@@ -782,6 +782,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				colorGenerator.ToGzColor(this->flatcolor);
 			}
 
+			// clip color
+			flatcolor[0] = flatcolor[0] > 1 ? 1 : (flatcolor[0] < 0 ? 0 : flatcolor[0]);
+			flatcolor[1] = flatcolor[1] > 1 ? 1 : (flatcolor[1] < 0 ? 0 : flatcolor[1]);
+			flatcolor[2] = flatcolor[2] > 1 ? 1 : (flatcolor[2] < 0 ? 0 : flatcolor[2]);
+
 			// project normalized color to 0-4096
 			float r = ctoi(flatcolor[0]);
 			float g = ctoi(flatcolor[1]);

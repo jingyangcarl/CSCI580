@@ -19,6 +19,7 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 #define INFILE  "ppot.asc"
+//#define INFILE  "ppot.tri.asc"
 #define OUTFILE "output.ppm"
 
 

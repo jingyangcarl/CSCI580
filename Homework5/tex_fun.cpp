@@ -68,13 +68,10 @@ int tex_fun(float u, float v, GzColor color)
 	float g = s * t * colorC[1] + (1 - s) * t * colorD[1] + s * (1 - t) * colorB[1] + (1 - s) * (1 - t) * colorA[1];
 	float b = s * t * colorC[2] + (1 - s) * t * colorD[2] + s * (1 - t) * colorB[2] + (1 - s) * (1 - t) * colorA[2];
 
-	//color[0] = r;
-	//color[1] = g;
-	//color[2] = b;
-
-	color[0] = colorA[0];
-	color[1] = colorA[1];
-	color[2] = colorA[2];
+	// assign color
+	color[0] = r;
+	color[1] = g;
+	color[2] = b;
 
 	return GZ_SUCCESS;
 }
