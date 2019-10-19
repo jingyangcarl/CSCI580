@@ -693,24 +693,27 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(this->flatcolor);
 
-	// generate vertex color for Gouraud shading
+	// read color from uv map
 	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
 	GzColor colorMid = { 0.0f, 0.0f, 0.0f };
 	GzColor colorBot = { 0.0f, 0.0f, 0.0f };
-	colorGenerator.setCurrentNorm(normTop);
-	colorGenerator.Generate();
-	colorGenerator.ToGzColor(colorTop);
-	colorGenerator.setCurrentNorm(normMid);
-	colorGenerator.Generate();
-	colorGenerator.ToGzColor(colorMid);
-	colorGenerator.setCurrentNorm(normBot);
-	colorGenerator.Generate();
-	colorGenerator.ToGzColor(colorBot);
-
-	// read color from uv map
 	this->tex_fun(uvTop[0], uvTop[1], colorTop);
 	this->tex_fun(uvMid[0], uvMid[1], colorMid);
 	this->tex_fun(uvBot[0], uvBot[1], colorBot);
+
+	// generate vertex color for Gouraud shading
+	colorGenerator.setK(colorTop[0], colorTop[1], colorTop[2]);
+	colorGenerator.setCurrentNorm(normTop);
+	colorGenerator.Generate();
+	colorGenerator.ToGzColor(colorTop);
+	colorGenerator.setK(colorMid[0], colorMid[1], colorMid[2]);
+	colorGenerator.setCurrentNorm(normMid);
+	colorGenerator.Generate();
+	colorGenerator.ToGzColor(colorMid);
+	colorGenerator.setK(colorBot[0], colorBot[1], colorBot[2]);
+	colorGenerator.setCurrentNorm(normBot);
+	colorGenerator.Generate();
+	colorGenerator.ToGzColor(colorBot);
 
 	/*
 	Description:

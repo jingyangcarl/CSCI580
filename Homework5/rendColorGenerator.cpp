@@ -110,3 +110,67 @@ void ColorGenerator::ToGzColor(GzColor& outputColor) {
 	outputColor[1] = this->outputColor[1];
 	outputColor[2] = this->outputColor[2];
 }
+
+/*
+Description:
+This function is used to set Ka for color generator;
+Input:
+@ const float Ka: ambient factor;
+Output:
+@ void returnValue: void;
+*/
+void ColorGenerator::setKa(const float Ka) {
+	this->Ka = Ka;
+}
+
+/*
+Description:
+This function is used to set Kd for color generator;
+Input:
+@ const float Kd: diffuse factor;
+Output:
+@ void returnValue: void;
+*/
+void ColorGenerator::setKd(const float Kd) {
+	this->Kd = Kd;
+}
+
+/*
+Description:
+This function is used to set Ks for color generator;
+Input:
+@ const float Ks: specular factor;
+Output:
+@ void returnValue: void;
+*/
+void ColorGenerator::setKs(const float Ks) {
+	this->Ks = Ks;
+}
+
+/*
+Description:
+This function is used to set spec for color generator;
+Input:
+@ const float Ka: specular exponent;
+Output:
+@ void returnValue: void;
+*/
+void ColorGenerator::setSpec(const float spec) {
+	this->spec = spec;
+}
+
+/*
+Description:
+This function is used to set Ka, Kd, Ks for color generator;
+Input:
+@ const float Ka: specular factor;
+@ const float Kd: diffuse factor;
+@ const float Ks: specular factor;
+Output:
+@ void returnValue: void;
+*/
+void ColorGenerator::setK(const float Ka, const float Kd, const float Ks) {
+	this->Ka = Ka;
+	this->Kd = Kd;
+	this->Ks = Ks;
+}

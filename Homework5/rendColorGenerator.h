@@ -9,6 +9,12 @@ public:
 	void setCurrentNorm(const GzCoord& normal);
 	void ToGzColor(GzColor& outputColor);
 
+	void setKa(const float Ka);
+	void setKd(const float Kd);
+	void setKs(const float Ks);
+	void setSpec(const float spec);
+	void setK(const float Ka, const float Kd, const float Ks);
+
 private:
 	int numLights;
 	GzLight* lights;
