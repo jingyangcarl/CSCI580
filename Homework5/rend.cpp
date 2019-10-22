@@ -636,9 +636,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		- optional: test for triangles with all three verts off-screen (trivial frustum cull)
 -- invoke triangle rasterizer  
 */
-	// perspective correctness
-
-
 	// prepare ver0, ver1, and ver2;
 	GzCoord* verCoord = (GzCoord*)(valueList[0]);
 	GzCoord ver0 = { verCoord[0][0], verCoord[0][1], verCoord[0][2] };
@@ -695,22 +692,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(this->flatcolor);
 
-	// transform uv value from image space to perspective space
-	auto image2perspective = [](float scaledZ, float p) mutable {
-		float zPrime = scaledZ / (MAXINT - scaledZ);
-		return p / (zPrime + 1);
-	};
-	uvTop[0] = image2perspective(verTop[2], uvTop[0]);
-	uvTop[1] = image2perspective(verTop[2], uvTop[1]);
-	uvMid[0] = image2perspective(verMid[2], uvMid[0]);
-	uvMid[1] = image2perspective(verMid[2], uvMid[1]);
-	uvBot[0] = image2perspective(verBot[2], uvBot[0]);
-	uvBot[1] = image2perspective(verBot[2], uvBot[1]);
-
 	// read color from uv map
 	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
 	GzColor colorMid = { 0.0f, 0.0f, 0.0f };
 	GzColor colorBot = { 0.0f, 0.0f, 0.0f };
+	// components in colors saves Ks instead of real color
 	this->tex_fun(uvTop[0], uvTop[1], colorTop);
 	this->tex_fun(uvMid[0], uvMid[1], colorMid);
 	this->tex_fun(uvBot[0], uvBot[1], colorBot);
@@ -728,6 +714,27 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	colorGenerator.setCurrentNorm(normBot);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorBot);
+
+	// transform uv value from image space to perspective space
+	/*
+	Description:
+	This function is used to transform parameter in perspective space to image space;
+	Input:
+	@ float scaledZ: scaled Z value in perspective space;
+	@ float p: parameter p in perspective space;
+	Output:
+	@ auto returnValue: a parameter in image space;
+	*/
+	auto image2perspective = [](float scaledZ, float p) mutable {
+		float zPrime = scaledZ / (MAXINT - scaledZ);
+		return p / (zPrime + 1);
+	};
+	uvTop[0] = image2perspective(verTop[2], uvTop[0]);
+	uvTop[1] = image2perspective(verTop[2], uvTop[1]);
+	uvMid[0] = image2perspective(verMid[2], uvMid[0]);
+	uvMid[1] = image2perspective(verMid[2], uvMid[1]);
+	uvBot[0] = image2perspective(verBot[2], uvBot[0]);
+	uvBot[1] = image2perspective(verBot[2], uvBot[1]);
 
 	/*
 	Description:
@@ -788,7 +795,16 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				float currentU = slopeUtoX * deltaX + shortEdge.getCurrentUV()[0];
 				float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
 
-				// interpolate uv back to image space
+				// interpolate uv back to image 
+				/*
+				Description:
+				This function is used to transform scaled parameter in image space back to perspective space;
+				Input£º
+				@ float scaledZ: scaled Z value in perspective space;
+				@ float scaledP: scaled parameter in image space;
+				Output:
+				@ auto returnValue: a parameter in perspective space;
+				*/
 				auto perspective2image = [](float scaledZ, float scaledP) {
 					float zPrime = scaledZ / (MAXINT - scaledZ);
 					return scaledP * (zPrime + 1);
