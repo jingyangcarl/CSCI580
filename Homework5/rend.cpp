@@ -715,7 +715,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorBot);
 
-	// transform uv value from image space to perspective space
+	// transform uv value from image space to perspective space for phong shading
 	/*
 	Description:
 	This function is used to transform parameter in perspective space to image space;
