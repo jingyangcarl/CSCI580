@@ -636,8 +636,10 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		- optional: test for triangles with all three verts off-screen (trivial frustum cull)
 -- invoke triangle rasterizer  
 */
+	// perspective correctness
 
-// prepare ver0, ver1, and ver2;
+
+	// prepare ver0, ver1, and ver2;
 	GzCoord* verCoord = (GzCoord*)(valueList[0]);
 	GzCoord ver0 = { verCoord[0][0], verCoord[0][1], verCoord[0][2] };
 	GzCoord ver1 = { verCoord[1][0], verCoord[1][1], verCoord[1][2] };
@@ -692,6 +694,18 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, norm0);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(this->flatcolor);
+
+	// transform uv value from image space to perspective space
+	auto image2perspective = [](float scaledZ, float p) mutable {
+		float zPrime = scaledZ / (MAXINT - scaledZ);
+		return p / (zPrime + 1);
+	};
+	uvTop[0] = image2perspective(verTop[2], uvTop[0]);
+	uvTop[1] = image2perspective(verTop[2], uvTop[1]);
+	uvMid[0] = image2perspective(verMid[2], uvMid[0]);
+	uvMid[1] = image2perspective(verMid[2], uvMid[1]);
+	uvBot[0] = image2perspective(verBot[2], uvBot[0]);
+	uvBot[1] = image2perspective(verBot[2], uvBot[1]);
 
 	// read color from uv map
 	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
@@ -773,6 +787,14 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				float slopeVtoX = (shortEdge.getCurrentUV()[1] - longEdge.getCurrentUV()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
 				float currentU = slopeUtoX * deltaX + shortEdge.getCurrentUV()[0];
 				float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
+
+				// interpolate uv back to image space
+				auto perspective2image = [](float scaledZ, float scaledP) {
+					float zPrime = scaledZ / (MAXINT - scaledZ);
+					return scaledP * (zPrime + 1);
+				};
+				currentU = perspective2image(z, currentU);
+				currentV = perspective2image(z, currentV);
 
 				GzCoord currentNormal = { currentNormX, currentNormY, currentNormZ };
 				GzColor K = { 0.0f, 0.0f, 0.0f };
