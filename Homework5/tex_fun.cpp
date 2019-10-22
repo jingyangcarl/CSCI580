@@ -79,6 +79,12 @@ int tex_fun(float u, float v, GzColor color)
 /* Procedural texture function */
 int ptex_fun(float u, float v, GzColor color)
 {
+	bool projU = (int)floor(u * 6) % 2;
+	bool projV = (int)floor(v * 6) % 2;
+
+	color[0] = projU ^ projV ? 1.0f : 0.0f;
+	color[1] = projU ^ projV ? 1.0f : 0.0f;
+	color[2] = projU ^ projV ? 1.0f : 0.0f;
 
 	return GZ_SUCCESS;
 }

@@ -184,7 +184,7 @@ GzMatrix	rotateY =
 #if 0   /* set up null texture function or valid pointer */
         valueListShader[5] = (GzPointer)0;
 #else
-        valueListShader[5] = (GzPointer)(tex_fun);	/* or use ptex_fun */
+        valueListShader[5] = (GzPointer)(ptex_fun);	/* or use ptex_fun */
 #endif
         status |= m_pRender->GzPutAttribute(6, nameListShader, valueListShader);
 
