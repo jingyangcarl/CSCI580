@@ -688,7 +688,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzTextureIndex uvBot = { vertexSorter.getUVBot()[0], vertexSorter.getUVBot()[1] };
 
 	// generate vertex color for flat shading
-	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka[0], Kd[0], Ks[0], spec, norm0);
+	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka, Kd, Ks, spec, norm0);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(this->flatcolor);
 
@@ -702,15 +702,15 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	this->tex_fun(uvBot[0], uvBot[1], colorBot);
 
 	// generate vertex color for Gouraud shading
-	colorGenerator.setK(colorTop[0], colorTop[1], colorTop[2]);
+	colorGenerator.setK(colorTop, colorTop, colorTop);
 	colorGenerator.setCurrentNorm(normTop);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorTop);
-	colorGenerator.setK(colorMid[0], colorMid[1], colorMid[2]);
+	colorGenerator.setK(colorMid, colorMid, colorMid);
 	colorGenerator.setCurrentNorm(normMid);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorMid);
-	colorGenerator.setK(colorBot[0], colorBot[1], colorBot[2]);
+	colorGenerator.setK(colorBot, colorBot, colorBot);
 	colorGenerator.setCurrentNorm(normBot);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorBot);
@@ -791,9 +791,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				float slopeRToX = (shortEdge.getCurrentColor()[0] - longEdge.getCurrentColor()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
 				float slopeGToX = (shortEdge.getCurrentColor()[1] - longEdge.getCurrentColor()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
 				float slopeBToX = (shortEdge.getCurrentColor()[2] - longEdge.getCurrentColor()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				//this->flatcolor[0] = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
-				//this->flatcolor[1] = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
-				//this->flatcolor[2] = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
+				float r = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
+				float g = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
+				float b = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
 
 				float slopeUtoX = (shortEdge.getCurrentUV()[0] - longEdge.getCurrentUV()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
 				float slopeVtoX = (shortEdge.getCurrentUV()[1] - longEdge.getCurrentUV()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
@@ -806,6 +806,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				GzColor K = { 0.0f, 0.0f, 0.0f };
 				this->tex_fun(currentU, currentV, K);
 
+				this->flatcolor[0] = r * K[0];
+				this->flatcolor[1] = g * K[1];
+				this->flatcolor[2] = b * K[2];
 			}
 			else if (this->interp_mode == GZ_NORMALS) {
 				// Phong shading
@@ -828,7 +831,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				GzCoord currentNormal = { currentNormX, currentNormY, currentNormZ };
 				GzColor K = { 0.0f, 0.0f, 0.0f };
 				this->tex_fun(currentU, currentV, K);
-				ColorGenerator colorGenerator(numlights, lights, ambientlight, K[0], K[1], Ks[0], spec, currentNormal);
+				ColorGenerator colorGenerator(numlights, lights, ambientlight, K, K, Ks, spec, currentNormal);
 				colorGenerator.Generate();
 				colorGenerator.ToGzColor(this->flatcolor);
 			}

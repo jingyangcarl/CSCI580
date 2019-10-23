@@ -9,21 +9,21 @@ Input:
 @ const int numLights: the number of lights;
 @ GzLight* lights: a list of GzLight;
 @ const GzLight& ambientLight: ambient light;
-@ const float Ka: ambient factor;
-@ const float Kd: diffuse factor;
-@ const float Ks: specular factor;
+@ const GzColor& Ka: ambient factor;
+@ const GzColor& Kd: diffuse factor;
+@ const GzColor& Ks: specular factor;
 @ const float spec: specular exponent;
 @ const GzCoord& currentNorm: the current normal vector;
 Output:
 @ ColorGenerator returnValue: a ColorGenerator;
 */
-ColorGenerator::ColorGenerator(const int numLights, GzLight* lights, const GzLight& ambientLight, const float Ka, const float Kd, const float Ks, const float spec, const GzCoord& currentNorm) {
+ColorGenerator::ColorGenerator(const int numLights, GzLight* lights, const GzLight& ambientLight, const GzColor& Ka, const GzColor& Kd, const GzColor& Ks, const float spec, const GzCoord& currentNorm) {
 	this->numLights = numLights;
 	this->lights = lights;
 	this->ambientLight = ambientLight;
-	this->Ka = Ka;
-	this->Kd = Kd;
-	this->Ks = Ks;
+	this->Ka[0] = Ka[0]; this->Ka[1] = Ka[1]; this->Ka[2] = Ka[2];
+	this->Kd[0] = Kd[0]; this->Kd[1] = Kd[1]; this->Kd[2] = Kd[2];
+	this->Ks[0] = Ks[0]; this->Ks[1] = Ks[1]; this->Ks[2] = Ks[2];
 	this->spec = spec;
 	Matrix(currentNorm).normalize().toGzColor(this->currentNorm);
 }
@@ -55,7 +55,7 @@ void ColorGenerator::Generate() {
 
 		specularVector += Matrix(lights[i].color) * pow(rDotE, this->spec);
 	}
-	(specularVector * this->Ks).toGzColor(specularColor);
+	(specularVector.ParallelProduct(Ks)).toGzColor(specularColor);
 	specularColor[0] = specularColor[0] < 0 ? 0 : specularColor[0] > 1 ? 1 : specularColor[0];
 	specularColor[1] = specularColor[1] < 0 ? 0 : specularColor[1] > 1 ? 1 : specularColor[1];
 	specularColor[2] = specularColor[2] < 0 ? 0 : specularColor[2] > 1 ? 1 : specularColor[2];
@@ -73,11 +73,12 @@ void ColorGenerator::Generate() {
 			diffuseVector += Matrix(lights[i].color) * -nDotL;
 		}
 	}
-	(diffuseVector * this->Kd).toGzColor(diffuseColor);
+	//(diffuseVector * this->Kd).toGzColor(diffuseColor);
+	(diffuseVector.ParallelProduct(Kd)).toGzColor(diffuseColor);
 
 	// ambient color
 	ambientVector = Matrix(this->ambientLight.color);
-	(ambientVector * this->Ka).toGzColor(ambientColor);
+	(ambientVector.ParallelProduct(Ka)).toGzColor(ambientColor);
 
 	// Color
 	(Matrix(specularColor) + Matrix(diffuseColor) + Matrix(ambientColor)).toGzColor(outputColor);
@@ -115,36 +116,36 @@ void ColorGenerator::ToGzColor(GzColor& outputColor) {
 Description:
 This function is used to set Ka for color generator;
 Input:
-@ const float Ka: ambient factor;
+@ const GzColor& Ka: ambient factor;
 Output:
 @ void returnValue: void;
 */
-void ColorGenerator::setKa(const float Ka) {
-	this->Ka = Ka;
+void ColorGenerator::setKa(const GzColor& Ka) {
+	this->Ka[0] = Ka[0]; this->Ka[1] = Ka[1]; this->Ka[2] = Ka[2];
 }
 
 /*
 Description:
 This function is used to set Kd for color generator;
 Input:
-@ const float Kd: diffuse factor;
+@ const GzColor& Kd: diffuse factor;
 Output:
 @ void returnValue: void;
 */
-void ColorGenerator::setKd(const float Kd) {
-	this->Kd = Kd;
+void ColorGenerator::setKd(const GzColor& Kd) {
+	this->Kd[0] = Kd[0]; this->Kd[1] = Kd[1]; this->Kd[2] = Kd[2];
 }
 
 /*
 Description:
 This function is used to set Ks for color generator;
 Input:
-@ const float Ks: specular factor;
+@ const GzColor& Ks: specular factor;
 Output:
 @ void returnValue: void;
 */
-void ColorGenerator::setKs(const float Ks) {
-	this->Ks = Ks;
+void ColorGenerator::setKs(const GzColor& Ks) {
+	this->Ks[0] = Ks[0]; this->Ks[1] = Ks[1]; this->Ks[2] = Ks[2];
 }
 
 /*
@@ -169,8 +170,8 @@ Input:
 Output:
 @ void returnValue: void;
 */
-void ColorGenerator::setK(const float Ka, const float Kd, const float Ks) {
-	this->Ka = Ka;
-	this->Kd = Kd;
-	this->Ks = Ks;
+void ColorGenerator::setK(const GzColor& Ka, const GzColor& Kd, const GzColor& Ks) {
+	this->Ka[0] = Ka[0]; this->Ka[1] = Ka[1]; this->Ka[2] = Ka[2];
+	this->Kd[0] = Kd[0]; this->Kd[1] = Kd[1]; this->Kd[2] = Kd[2];
+	this->Ks[0] = Ks[0]; this->Ks[1] = Ks[1]; this->Ks[2] = Ks[2];
 }
