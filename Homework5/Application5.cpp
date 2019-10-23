@@ -185,7 +185,7 @@ GzMatrix	rotateY =
         valueListShader[5] = (GzPointer)0;
 #else
 
-#define PROCEDURAL
+#define IMAGE
 #ifdef IMAGE
 		valueListShader[5] = (GzPointer)(tex_fun);	/* or use ptex_fun */
 #endif IMAGE

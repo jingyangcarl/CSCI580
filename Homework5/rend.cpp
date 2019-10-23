@@ -767,6 +767,20 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			float slopeZToX = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
 			GzDepth z = slopeZToX * deltaX + shortEdge.getCurrentVer()[2];
 
+			/*
+			Description:
+			This function is used to transform scaled parameter in image space back to perspective space;
+			Input£º
+			@ float scaledZ: scaled Z value in perspective space;
+			@ float scaledP: scaled parameter in image space;
+			Output:
+			@ auto returnValue: a parameter in perspective space;
+			*/
+			auto perspective2image = [](float scaledZ, float scaledP) {
+				float zPrime = scaledZ / (MAXINT - scaledZ);
+				return scaledP * (zPrime + 1);
+			};
+
 			// calculate r, g, b
 			if (this->interp_mode == GZ_FLAT) {
 				// flat shading
@@ -777,9 +791,21 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				float slopeRToX = (shortEdge.getCurrentColor()[0] - longEdge.getCurrentColor()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
 				float slopeGToX = (shortEdge.getCurrentColor()[1] - longEdge.getCurrentColor()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
 				float slopeBToX = (shortEdge.getCurrentColor()[2] - longEdge.getCurrentColor()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				this->flatcolor[0] = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
-				this->flatcolor[1] = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
-				this->flatcolor[2] = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
+				//this->flatcolor[0] = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
+				//this->flatcolor[1] = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
+				//this->flatcolor[2] = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
+
+				float slopeUtoX = (shortEdge.getCurrentUV()[0] - longEdge.getCurrentUV()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float slopeVtoX = (shortEdge.getCurrentUV()[1] - longEdge.getCurrentUV()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				float currentU = slopeUtoX * deltaX + shortEdge.getCurrentUV()[0];
+				float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
+
+				// interpolate uv back to image 
+				currentU = perspective2image(z, currentU);
+				currentV = perspective2image(z, currentV);
+				GzColor K = { 0.0f, 0.0f, 0.0f };
+				this->tex_fun(currentU, currentV, K);
+
 			}
 			else if (this->interp_mode == GZ_NORMALS) {
 				// Phong shading
@@ -796,19 +822,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
 
 				// interpolate uv back to image 
-				/*
-				Description:
-				This function is used to transform scaled parameter in image space back to perspective space;
-				Input£º
-				@ float scaledZ: scaled Z value in perspective space;
-				@ float scaledP: scaled parameter in image space;
-				Output:
-				@ auto returnValue: a parameter in perspective space;
-				*/
-				auto perspective2image = [](float scaledZ, float scaledP) {
-					float zPrime = scaledZ / (MAXINT - scaledZ);
-					return scaledP * (zPrime + 1);
-				};
 				currentU = perspective2image(z, currentU);
 				currentV = perspective2image(z, currentV);
 

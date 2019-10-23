@@ -524,6 +524,27 @@ Matrix& Matrix::CrossProduct(const Matrix& operand) {
 
 /*
 Description:
+This function is used to implement .* operator in Matlab;
+Input:
+@ const Matrix& operand: a left hand operand;
+Output:
+@ Matrix& returnValue: a reference to the result;
+*/
+Matrix& Matrix::ParallelProduct(const Matrix& operand) {
+	if (row != operand.row) return *this;
+	if (col != operand.col) return *this;
+
+	Matrix* result = new Matrix(row, col);
+	for (int i = 0; i < row; i++) {
+		for (int j = 0; j < col; j++) {
+			result->data[i][j] = data[i][j] * operand.data[i][j];
+		}
+	}
+	return *result;
+}
+
+/*
+Description:
 This function is used to normalize the Matrix;
 Input:
 @ void parameter: void;

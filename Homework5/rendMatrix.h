@@ -38,6 +38,7 @@ public:
 	Matrix& operator*(const float operand);
 	Matrix& operator/=(const float operand);
 	Matrix& CrossProduct(const Matrix& operand);
+	Matrix& ParallelProduct(const Matrix& operand);
 	Matrix& normalize();
 	Matrix& transpose();
 
