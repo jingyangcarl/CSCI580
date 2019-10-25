@@ -696,21 +696,16 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
 	GzColor colorMid = { 0.0f, 0.0f, 0.0f };
 	GzColor colorBot = { 0.0f, 0.0f, 0.0f };
-	// components in colors saves Ks instead of real color
-	this->tex_fun(uvTop[0], uvTop[1], colorTop);
-	this->tex_fun(uvMid[0], uvMid[1], colorMid);
-	this->tex_fun(uvBot[0], uvBot[1], colorBot);
 
 	// generate vertex color for Gouraud shading
-	colorGenerator.setK(colorTop, colorTop, colorTop);
+	GzColor Kt = { 1.0f, 1.0f, 1.0f };
+	colorGenerator.setK(Kt, Kt, Kt);
 	colorGenerator.setCurrentNorm(normTop);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorTop);
-	colorGenerator.setK(colorMid, colorMid, colorMid);
 	colorGenerator.setCurrentNorm(normMid);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorMid);
-	colorGenerator.setK(colorBot, colorBot, colorBot);
 	colorGenerator.setCurrentNorm(normBot);
 	colorGenerator.Generate();
 	colorGenerator.ToGzColor(colorBot);

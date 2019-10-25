@@ -73,7 +73,6 @@ void ColorGenerator::Generate() {
 			diffuseVector += Matrix(lights[i].color) * -nDotL;
 		}
 	}
-	//(diffuseVector * this->Kd).toGzColor(diffuseColor);
 	(diffuseVector.ParallelProduct(Kd)).toGzColor(diffuseColor);
 
 	// ambient color
