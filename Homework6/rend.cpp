@@ -671,6 +671,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 -- invoke triangle rasterizer  
 */
 
+	float AAFilter[6][3]{
+		-0.52, 0.38, 0.128,		0.41, 0.56, 0.119,		0.27, 0.08, 0.294,
+		-0.17, -0.29, 0.249,	0.58, -0.55, 0.104,		-0.31, -0.71, 0.106
+	};
+
 	for (int bufferIndex = 0; bufferIndex < 6; bufferIndex++) {
 		// prepare ver0, ver1, and ver2;
 		GzCoord* verCoord = (GzCoord*)(valueList[0]);
@@ -713,9 +718,9 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		// sort ver1, ver2, ver3 to a low-to-height Y ordering
 		VertexSorter vertexSorter(ver0, ver1, ver2, norm0, norm1, norm2, uv0, uv1, uv2);
 		vertexSorter.Sort();
-		GzCoord verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
-		GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
-		GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
+		GzCoord verTop = { vertexSorter.getVerTop()[0] - AAFilter[bufferIndex][0], vertexSorter.getVerTop()[1] - AAFilter[bufferIndex][1], vertexSorter.getVerTop()[2] };
+		GzCoord verMid = { vertexSorter.getVerMid()[0] - AAFilter[bufferIndex][0], vertexSorter.getVerMid()[1] - AAFilter[bufferIndex][1], vertexSorter.getVerMid()[2] };
+		GzCoord verBot = { vertexSorter.getVerBot()[0] - AAFilter[bufferIndex][0], vertexSorter.getVerBot()[1] - AAFilter[bufferIndex][1], vertexSorter.getVerBot()[2] };
 		GzCoord normTop = { vertexSorter.getNormTop()[0], vertexSorter.getNormTop()[1], vertexSorter.getNormTop()[2] };
 		GzCoord normMid = { vertexSorter.getNormMid()[0], vertexSorter.getNormMid()[1], vertexSorter.getNormMid()[2] };
 		GzCoord normBot = { vertexSorter.getNormBot()[0], vertexSorter.getNormBot()[1], vertexSorter.getNormBot()[2] };
@@ -931,7 +936,19 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 	for (int i = 0; i < xres; i++) {
 		for (int j = 0; j < yres; j++) {
-			pixelbuffer[ARRAY(i, j)] = pixelBuffers[5][ARRAY(i, j)];
+			float r(0), g(0), b(0), a(0), z(0);
+			for (int bufferIndex = 0; bufferIndex < 6; bufferIndex++) {
+				r += pixelBuffers[bufferIndex][ARRAY(i, j)].red * AAFilter[bufferIndex][2];
+				g += pixelBuffers[bufferIndex][ARRAY(i, j)].green * AAFilter[bufferIndex][2];
+				b += pixelBuffers[bufferIndex][ARRAY(i, j)].blue * AAFilter[bufferIndex][2];
+				a += pixelBuffers[bufferIndex][ARRAY(i, j)].alpha * AAFilter[bufferIndex][2];
+				z += pixelBuffers[bufferIndex][ARRAY(i, j)].z * AAFilter[bufferIndex][2];
+			}
+			pixelbuffer[ARRAY(i, j)].red = r;
+			pixelbuffer[ARRAY(i, j)].green = g;
+			pixelbuffer[ARRAY(i, j)].blue = b;
+			pixelbuffer[ARRAY(i, j)].alpha = a;
+			pixelbuffer[ARRAY(i, j)].z = z;
 		}
 	}
 
