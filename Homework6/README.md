@@ -1,4 +1,4 @@
-Homework 5
+Homework 6
 ==========
 
 ## Author
@@ -11,13 +11,11 @@ Homework 5
 ## Solution Results:
 | Shading Mode |  Gouraud  |  Phong  |
 | :---: | :-: | :-: |
-|  !Perspective Correction | ![GouraudTexture](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%205/outputGouraudTexture.gif) | ![PhongTexture](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%205/outputPhongTexture.gif) |
-|  Perspective Correction  | ![GouraudTexturePerspective](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%205/outputGouraudTexturePerspective.gif) | ![PhongPerspective](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%205/outputPhongTexturePerspective.gif) |
-|  Procedural | ![GouraudProcedural](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%205/outputGouraudProcedural.gif) | ![PhongProcedural](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%205/outputPhongProcedural.gif) |
-
+|  !AA | ![GouraudAliasing](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%206/GouraudAliasing.gif) | ![PhongAliasing](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%206/PhongAliasing.gif) |
+|  AA  | ![GouraudAntiliasing](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%206/GouraudAntialiasing.gif) | ![PhongAntialiasing](https://github.com/jingyangcarl/Resources/blob/master/CSCI580/Homework%206/PhongAntialiasing.gif) |
 
 ## Solution Introduction:
-This solution is to render a 2D teapot using Gouraud shading, and Phong shading based on color equation with texture. Perspective correction is necessary.
+This solution is to conduct anti-alising operator on the rendered results. The basic idea is to generate 6 pixel buffers with offset to the original rendered results and add up 5 pixel buffers with predefined weights.
 
 ## Solution Environment:
 * Windows 10
@@ -27,8 +25,6 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 > Source Files
 >
 >> Application.cpp
->>
->> Application5.cpp
 >>
 >> CS580HW.cpp
 >>
@@ -53,9 +49,9 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >>> GzRender::GzRender(int xRes, int yRes): This function is a constructor. Initialization includes resolution, framebuffer, pixelbuffer, default camera and projection stack;
 >>>
 >>> GzRender::~GzRender(): This function is a destructor;
->>> 
->>> int GzRender::GzDefault(): This function is used to setup default pixel values;
 >>>
+>>> int GzRender::GzDefault(): This function is used to setup default pixel values;
+>>> 
 >>> int GzRender::GzBeginRender(): This function is used to prepare projections used for transform model coordinations to world coordinations, camera coordinations, perspective coordinations, and screen coordinations;
 >>>
 >>> int GzRender::GzPutCamera(GzCamera camera): This function is used to initialize camera including transformation matrix from world space to camera space, and from camera space to perspective space, current camera location, current look at position, up vector, and horizontal field of view;
@@ -66,16 +62,17 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >>>
 >>> int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z): This function is used to pug a pixel to pixel buffer;
 >>>
->>> int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth *z): This function is used to get a pixel value from pixel buffer;
+>>> int GzRender::GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth *z): This function is used to get a pixel value 
+from pixel buffer;
 >>>
 >>> int GzRender::GzFlushDisplay2File(FILE* outfile): This function is used to output the current pixelbuffer to a ppm file;
 >>>
 >>> int GzRender::GzFlushDisplay2FrameBuffer(): This function is used to push the pixel buffer to frame buffer for display;
 >>>
->>> int GzRender::GzPutAttribute(int numAttributes, GzToken *nameList, GzPointer *valueList): This function is used to set renderer attributes;
->>>
+>>> int GzRender::GzPutAttribute(int numAttributes, GzToken     *nameList, GzPointer *valueList): This function is used to set renderer attributes;
+>>> 
 >>> int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList): This function is used to render triangles to pixel buffer, a scan line algorithm is implemented for trangle rasterization;
->>
+>> 
 >> RotateDlg.cpp
 >>
 >> ScaleDlg.cpp
@@ -97,7 +94,7 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >>> void ColorGenerator::ToGzColor(GzColor& outputColor): This function is used to copy data entries to a GzColor;
 >>>
 >>> void ColorGenerator::setKa(const GzColor& Ka): This function is used to set Ka for color generator;
->>> 
+>>>
 >>> void ColorGenerator::setKd(const GzColor& Kd): This function is used to set Kd for color generator;
 >>>
 >>> void ColorGenerator::setKs(const GzColor& Ks): This function is used to set Ks for color generator;
@@ -116,7 +113,8 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >>>
 >>> DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(const GzCoord& startVer, const GzCoord& endVer, const GzCoord& startNorm, const GzCoord& endNorm, const GzColor& startColor, const GzColor& endColor, const bool initToScanLine): This function is a constructor;
 >>>
->>> DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(const GzCoord& startVer, const GzCoord& endVer, const GzCoord& startNorm, const GzCoord& endNorm, const GzColor& startColor, const GzColor& endColor, const GzTextureIndex& startUV, const GzTextureIndex& endUV, const bool initToScanLine): This function is a constructor;
+>>> DigitalDifferentialAnalyzer::DigitalDifferentialAnalyzer(const GzCoord& startVer, const GzCoord& endVer, const GzCoord& startNorm, const GzCoord& endNorm, const GzColor& startColor, const GzColor& endColor, const GzTextureIndex& startUV, const GzTextureIndex& endUV, const bool initToScanLine): This function is 
+a constructor;
 >>>
 >>> float* DigitalDifferentialAnalyzer::MoveY(const float deltaY): This function is used to move current point, defined as a member variable, along the edge from the start point to the end point by deltaY;
 >>>
@@ -178,12 +176,13 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >>>
 >>> Matrix& Matrix::generateMatrixRotation(const float u, const float v, const float w, const float degree): This static function is used to generate a rotation matrix around a given rotation central vector and rotation angle, the result will saved in the result matrix;
 >>>
->>> Matrix& Matrix::generateMatrixTranslation(const float tx, const float ty, const float tz): This static function is used to generate a translation matrix, the result will be saved in the result matrix;
+>>> Matrix& Matrix::generateMatrixTranslation(const float tx, const float ty, const float tz): This static function is used to generate a translation matrix, 
+the result will be saved in the result matrix;
 >>>
 >>> Matrix& Matrix::generateMatrixScale(const float sx, const float sy, const float sz): This static function is used to generate a scale matrix, the result will be saved in the result matrix;
 >>>
 >>> Matrix& Matrix::generateIdentity(int row): This function is used to generate a square identity matrix;
->>>
+>>> 
 >>> Matrix& Matrix::operator+(const Matrix& operand): This function is a overload of operator+ with a Matrix;
 >>>
 >>> Matrix& Matrix::operator+=(const Matrix& operand): This function is a overload of operator+= with a Matrix;
@@ -195,11 +194,11 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >>> Matrix& Matrix::operator-(const Matrix& operand): This function is a overload of operator- with a Matrix;
 >>>
 >>> Matrix& Matrix::operator-(const float operand): This function is a overload of operator- with a float number;
->>>
+>>> 
 >>> Matrix& Matrix::operator*(const Matrix& operand): This function is a overload of operator* with a Matrix;
 >>>
 >>> Matrix& Matrix::operator*=(const Matrix& operand): This function is a overload of operator*= with a Matrix;
->>> 
+>>>
 >>> Matrix& Matrix::operator*(const float operand): This function is a overload of operator* with a float number;
 >>>
 >>> Matrix& Matrix::operator*=(const float operand): This function is a overload of operator*= with a float number;
@@ -209,7 +208,7 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >>> Matrix& Matrix::CrossProduct(const Matrix& operand): This function is used to calculate the cross product with another Matrix;
 >>>
 >>> Matrix& Matrix::ParallelProduct(const Matrix& operand): This function is used to implement .* operator in Matlab;
->>> 
+>>>
 >>> Matrix& Matrix::normalize(): This function is used to normalize the Matrix;
 >>>
 >>> Matrix& Matrix::transpose(): This function is used to transpose the Matrix;
@@ -244,11 +243,11 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >>>
 >>> float* VertexSorter::getUVBot(): This function is used to get the bottom vertex's uv value;
 >>
+>> Application6.cpp
+>>
 > Header Files
 >
 >> Application.h
->>
->> Application5.h
 >>
 >> CS580HW.h
 >>
@@ -259,7 +258,7 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >> gz.h
 >>
 >> MainFrm.h
->> 
+>>
 >> rend.h
 >>
 >> Resource.h
@@ -279,25 +278,27 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 >> rendMatrix.h
 >>
 >> rendVertexSorter.h
+>>
+>> Application6.h
 >
 
 ## Solution Hierarchy:
 ```
-./Homework5
+./Homework6
 │  Application.cpp
 │  Application.h
-│  Application5.cpp
-│  Application5.h
-│  Assignment5.doc
+│  Application6.cpp
+│  Application6.h
+│  Assignment6.doc
 │  CS580HW.cpp
 │  CS580HW.h
 │  CS580HW.rc
 │  CS580HW5.dsp
 │  CS580HW5.dsw
-│  CS580HW5.sln
 │  CS580HW5.vcxproj
 │  CS580HW5.vcxproj.filters
 │  CS580HW5.vcxproj.user
+│  CS580HW6.sln
 │  CS580HWDoc.cpp
 │  CS580HWDoc.h
 │  CS580HWView.cpp
@@ -305,7 +306,12 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 │  Gz.h
 │  MainFrm.cpp
 │  MainFrm.h
+│  output.ppm
 │  ppot.asc
+│  ppot.np.ppm
+│  ppot.p.ppm
+│  ppot.tri.asc
+│  proc-tex.ppm
 │  README.md
 │  rend.cpp
 │  rend.h
@@ -325,6 +331,7 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
 │  StdAfx.cpp
 │  StdAfx.h
 │  texture
+│  texture2
 │  tex_fun.cpp
 │  TranslateDlg.cpp
 │  TranslateDlg.h
@@ -334,5 +341,6 @@ This solution is to render a 2D teapot using Gouraud shading, and Phong shading 
         CS580HW.rc2
         CS580HWDoc.ico
         icon1.ico
+        Thumbs.db
         Toolbar.bmp
 ```
