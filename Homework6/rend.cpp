@@ -385,6 +385,22 @@ int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, G
 	return GZ_SUCCESS;
 }
 
+int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z, int bufferIndex) {
+	if (i >= 0 && i < xres && j >= 0 && j < yres) {
+		if (z <= pixelBuffers[bufferIndex][ARRAY(i, j)].z) {
+			pixelBuffers[bufferIndex][ARRAY(i, j)].red = r < 4095 ? r : 4095;
+			pixelBuffers[bufferIndex][ARRAY(i, j)].green = g < 4095 ? g : 4095;
+			pixelBuffers[bufferIndex][ARRAY(i, j)].blue = b < 4095 ? b : 4095;
+			pixelBuffers[bufferIndex][ARRAY(i, j)].alpha = a;
+			pixelBuffers[bufferIndex][ARRAY(i, j)].z = z;
+		}
+	}
+	else {
+		GZ_FAILURE;
+	}
+	return GZ_SUCCESS;
+}
+
 /*
 Description:
 This function is used to get a pixel value from pixel buffer;
@@ -636,112 +652,19 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		- optional: test for triangles with all three verts off-screen (trivial frustum cull)
 -- invoke triangle rasterizer  
 */
-	// prepare ver0, ver1, and ver2;
-	GzCoord* verCoord = (GzCoord*)(valueList[0]);
-	GzCoord ver0 = { verCoord[0][0], verCoord[0][1], verCoord[0][2] };
-	GzCoord ver1 = { verCoord[1][0], verCoord[1][1], verCoord[1][2] };
-	GzCoord ver2 = { verCoord[2][0], verCoord[2][1], verCoord[2][2] };
 
-	// project ver0, ver1 and ver2;
-	Matrix projVer0 = Matrix(Ximage[matlevel]) * Matrix(ver0, 1.0f).transpose();
-	Matrix projVer1 = Matrix(Ximage[matlevel]) * Matrix(ver1, 1.0f).transpose();
-	Matrix projVer2 = Matrix(Ximage[matlevel]) * Matrix(ver2, 1.0f).transpose();
-	projVer0 /= projVer0.getData(3, 0);
-	projVer1 /= projVer1.getData(3, 0);
-	projVer2 /= projVer2.getData(3, 0);
-	projVer0.transpose().toGzCoord(ver0);
-	projVer1.transpose().toGzCoord(ver1);
-	projVer2.transpose().toGzCoord(ver2);
 
-	// prepare norm0, norm1, and norm2;
-	GzCoord* normCoord = (GzCoord*)(valueList[1]);
-	GzCoord norm0 = { normCoord[0][0], normCoord[0][1], normCoord[0][2] };
-	GzCoord norm1 = { normCoord[1][0], normCoord[1][1], normCoord[1][2] };
-	GzCoord norm2 = { normCoord[2][0], normCoord[2][1], normCoord[2][2] };
-
-	// project norm0, norm1, and norm2 to model space;
-	Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
-	Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
-	Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
-	projNorm0.transpose().toGzCoord(norm0, true);
-	projNorm1.transpose().toGzCoord(norm1, true);
-	projNorm2.transpose().toGzCoord(norm2, true);
-
-	// prepare uv0, uv1, vu2;
-	GzTextureIndex* uvCoord = (GzTextureIndex*)(valueList[2]);
-	GzTextureIndex uv0 = { uvCoord[0][0], uvCoord[0][1] };
-	GzTextureIndex uv1 = { uvCoord[1][0], uvCoord[1][1] };
-	GzTextureIndex uv2 = { uvCoord[2][0], uvCoord[2][1] };
-
-	// vertex sorting
-	// sort ver1, ver2, ver3 to a low-to-height Y ordering
-	VertexSorter vertexSorter(ver0, ver1, ver2, norm0, norm1, norm2, uv0, uv1, uv2);
-	vertexSorter.Sort();
-	GzCoord verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
-	GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
-	GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
-	GzCoord normTop = { vertexSorter.getNormTop()[0], vertexSorter.getNormTop()[1], vertexSorter.getNormTop()[2] };
-	GzCoord normMid = { vertexSorter.getNormMid()[0], vertexSorter.getNormMid()[1], vertexSorter.getNormMid()[2] };
-	GzCoord normBot = { vertexSorter.getNormBot()[0], vertexSorter.getNormBot()[1], vertexSorter.getNormBot()[2] };
-	GzTextureIndex uvTop = { vertexSorter.getUVTop()[0], vertexSorter.getUVTop()[1] };
-	GzTextureIndex uvMid = { vertexSorter.getUVMid()[0], vertexSorter.getUVMid()[1] };
-	GzTextureIndex uvBot = { vertexSorter.getUVBot()[0], vertexSorter.getUVBot()[1] };
-
-	// generate vertex color for flat shading
-	ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka, Kd, Ks, spec, norm0);
-	colorGenerator.Generate();
-	colorGenerator.ToGzColor(this->flatcolor);
-
-	// read color from uv map
-	GzColor colorTop = { 0.0f, 0.0f, 0.0f };
-	GzColor colorMid = { 0.0f, 0.0f, 0.0f };
-	GzColor colorBot = { 0.0f, 0.0f, 0.0f };
-
-	// generate vertex color for Gouraud shading
-	GzColor Kt = { 1.0f, 1.0f, 1.0f };
-	colorGenerator.setK(Kt, Kt, Kt);
-	colorGenerator.setCurrentNorm(normTop);
-	colorGenerator.Generate();
-	colorGenerator.ToGzColor(colorTop);
-	colorGenerator.setCurrentNorm(normMid);
-	colorGenerator.Generate();
-	colorGenerator.ToGzColor(colorMid);
-	colorGenerator.setCurrentNorm(normBot);
-	colorGenerator.Generate();
-	colorGenerator.ToGzColor(colorBot);
-
-	// transform uv value from image space to perspective space for phong shading
-	/*
-	Description:
-	This function is used to transform parameter in perspective space to image space;
-	Input:
-	@ float scaledZ: scaled Z value in perspective space;
-	@ float p: parameter p in perspective space;
-	Output:
-	@ auto returnValue: a parameter in image space;
-	*/
-	auto image2perspective = [](float scaledZ, float p) mutable {
-		float zPrime = scaledZ / (MAXINT - scaledZ);
-		return p / (zPrime + 1);
-	};
-	uvTop[0] = image2perspective(verTop[2], uvTop[0]);
-	uvTop[1] = image2perspective(verTop[2], uvTop[1]);
-	uvMid[0] = image2perspective(verMid[2], uvMid[0]);
-	uvMid[1] = image2perspective(verMid[2], uvMid[1]);
-	uvBot[0] = image2perspective(verBot[2], uvBot[0]);
-	uvBot[1] = image2perspective(verBot[2], uvBot[1]);
-
-	/*
-	Description:
-	This function is a lambda function defined to render pixels scan line by scan line from the short edge side to long edge side of a triangle by a top-down order;
-	Input:
-	@ DDA& shortEdge: the shorter edge of a triangle;
-	@ DDA& longEdge: the longest edge of a triangle;
-	@ bool isShortEdgeOnRight: if the short edge is on the right of long edge;
-	Output:
-	@ auto returnValue: an auto returnValue;
-	*/
-	auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight) mutable {
+/*
+Description:
+This function is a lambda function defined to render pixels scan line by scan line from the short edge side to long edge side of a triangle by a top-down order;
+Input:
+@ DDA& shortEdge: the shorter edge of a triangle;
+@ DDA& longEdge: the longest edge of a triangle;
+@ bool isShortEdgeOnRight: if the short edge is on the right of long edge;
+Output:
+@ auto returnValue: an auto returnValue;
+*/
+	auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight, int bufferIndex) mutable {
 		/*
 		Description:
 		This function is a lambda function defined to calculate color, normal and depth at given location;
@@ -754,7 +677,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		Output:
 		@ auto returnValue: an auto returnValue;
 		*/
-		auto Render = [this](const int i, const int j, DDA& shortEdge, DDA& longEdge) mutable {
+		auto Render = [this](const int i, const int j, DDA& shortEdge, DDA& longEdge, int bufferIndex) mutable {
 
 			float deltaX = i - shortEdge.getCurrentVer()[0];
 
@@ -842,7 +765,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			float b = ctoi(flatcolor[2]);
 
 			// put pixel
-			GzPut(i, j, r, g, b, 0, z);
+			GzPut(i, j, r, g, b, 0, z, bufferIndex);
 		};
 
 		// from the start line to the end line (along y)
@@ -857,13 +780,13 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			if (isShortEdgeOnRight) {
 				// short edge is on the right of the long edge
 				for (int i = floor(shortEdge.getCurrentVer()[0]); i >= longEdge.getCurrentVer()[0]; i--) {
-					Render(i, j, shortEdge, longEdge);
+					Render(i, j, shortEdge, longEdge, bufferIndex);
 				}
 			}
 			else {
 				// short edge is on the left of the long edge
 				for (int i = ceil(shortEdge.getCurrentVer()[0]); i <= longEdge.getCurrentVer()[0]; i++) {
-					Render(i, j, shortEdge, longEdge);
+					Render(i, j, shortEdge, longEdge, bufferIndex);
 				}
 			}
 			// move the current points to the next pixel line (scan line by scan line)
@@ -873,24 +796,158 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		return GZ_SUCCESS;
 	};
 
-	// find L/R relationship to determine clockwise edges
-	// clockwise edges could be either top-bot-mid or top-mid-bot
-	// initialize DDAs for top-bot edge and top-mid edge
-	DDA ddaTopBot(verTop, verBot, normTop, normBot, colorTop, colorBot, uvTop, uvBot, false);
-	DDA ddaTopMid(verTop, verMid, normTop, normMid, colorTop, colorMid, uvTop, uvMid, true);
-	DDA ddaMidBot(verMid, verBot, normMid, normBot, colorMid, colorBot, uvMid, uvBot, true);
 
-	// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
-	float xShortEdge = verMid[0];
-	float xLongEdge = ddaTopBot.MoveY(verMid[1] - verTop[1])[0];
+	// define AAshift
+	float AAFilter[6][3]{
+			-0.52, 0.38, 0.128,		0.41, 0.56, 0.119,		0.27, 0.08, 0.294,
+			-0.17, -0.29, 0.249,	0.58, -0.55, 0.104,		-0.31, -0.71, 0.106
+	};
 
-	// move current point of the long edge back for rendering
-	ddaTopBot.MoveReset();
-	ddaTopBot.MoveToNearestPixelLocation();
+	// init pixel buffers
+	for (int bufferIndex = 0; bufferIndex < 6; bufferIndex++) {
+		pixelBuffers[bufferIndex] = new GzPixel[xres * yres];
+		for (int x = 0; x < xres; x++) {
+			for (int y = 0; y < yres; y++) {
+				pixelBuffers[bufferIndex][ARRAY(x, y)].red = 4095;
+				pixelBuffers[bufferIndex][ARRAY(x, y)].green = 4095;
+				pixelBuffers[bufferIndex][ARRAY(x, y)].blue = 4095;
+				pixelBuffers[bufferIndex][ARRAY(x, y)].alpha = 1;
+				pixelBuffers[bufferIndex][ARRAY(x, y)].z = MAXINT32;
+			}
+		}
+	}
 
-	// if x < verMid[0], the short edge is on the left, or its on the right;
-	scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
-	scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
+	for (int bufferIndex = 0; bufferIndex < 6; bufferIndex++) {
+
+		// prepare ver0, ver1, and ver2;
+		GzCoord* verCoord = (GzCoord*)(valueList[0]);
+		GzCoord ver0 = { verCoord[0][0], verCoord[0][1], verCoord[0][2] };
+		GzCoord ver1 = { verCoord[1][0], verCoord[1][1], verCoord[1][2] };
+		GzCoord ver2 = { verCoord[2][0], verCoord[2][1], verCoord[2][2] };
+
+		// project ver0, ver1 and ver2;
+		Matrix projVer0 = Matrix(Ximage[matlevel]) * Matrix(ver0, 1.0f).transpose();
+		Matrix projVer1 = Matrix(Ximage[matlevel]) * Matrix(ver1, 1.0f).transpose();
+		Matrix projVer2 = Matrix(Ximage[matlevel]) * Matrix(ver2, 1.0f).transpose();
+		projVer0 /= projVer0.getData(3, 0);
+		projVer1 /= projVer1.getData(3, 0);
+		projVer2 /= projVer2.getData(3, 0);
+		projVer0.transpose().toGzCoord(ver0);
+		projVer1.transpose().toGzCoord(ver1);
+		projVer2.transpose().toGzCoord(ver2);
+
+		// prepare norm0, norm1, and norm2;
+		GzCoord* normCoord = (GzCoord*)(valueList[1]);
+		GzCoord norm0 = { normCoord[0][0], normCoord[0][1], normCoord[0][2] };
+		GzCoord norm1 = { normCoord[1][0], normCoord[1][1], normCoord[1][2] };
+		GzCoord norm2 = { normCoord[2][0], normCoord[2][1], normCoord[2][2] };
+
+		// project norm0, norm1, and norm2 to model space;
+		Matrix projNorm0 = Matrix(Xnorm[matlevel]) * Matrix(norm0, 1.0f).transpose();
+		Matrix projNorm1 = Matrix(Xnorm[matlevel]) * Matrix(norm1, 1.0f).transpose();
+		Matrix projNorm2 = Matrix(Xnorm[matlevel]) * Matrix(norm2, 1.0f).transpose();
+		projNorm0.transpose().toGzCoord(norm0, true);
+		projNorm1.transpose().toGzCoord(norm1, true);
+		projNorm2.transpose().toGzCoord(norm2, true);
+
+		// prepare uv0, uv1, vu2;
+		GzTextureIndex* uvCoord = (GzTextureIndex*)(valueList[2]);
+		GzTextureIndex uv0 = { uvCoord[0][0], uvCoord[0][1] };
+		GzTextureIndex uv1 = { uvCoord[1][0], uvCoord[1][1] };
+		GzTextureIndex uv2 = { uvCoord[2][0], uvCoord[2][1] };
+
+		// vertex sorting
+		// sort ver1, ver2, ver3 to a low-to-height Y ordering
+		VertexSorter vertexSorter(ver0, ver1, ver2, norm0, norm1, norm2, uv0, uv1, uv2);
+		vertexSorter.Sort();
+		GzCoord verTop = { vertexSorter.getVerTop()[0], vertexSorter.getVerTop()[1], vertexSorter.getVerTop()[2] };
+		GzCoord verMid = { vertexSorter.getVerMid()[0], vertexSorter.getVerMid()[1], vertexSorter.getVerMid()[2] };
+		GzCoord verBot = { vertexSorter.getVerBot()[0], vertexSorter.getVerBot()[1], vertexSorter.getVerBot()[2] };
+		GzCoord normTop = { vertexSorter.getNormTop()[0], vertexSorter.getNormTop()[1], vertexSorter.getNormTop()[2] };
+		GzCoord normMid = { vertexSorter.getNormMid()[0], vertexSorter.getNormMid()[1], vertexSorter.getNormMid()[2] };
+		GzCoord normBot = { vertexSorter.getNormBot()[0], vertexSorter.getNormBot()[1], vertexSorter.getNormBot()[2] };
+		GzTextureIndex uvTop = { vertexSorter.getUVTop()[0], vertexSorter.getUVTop()[1] };
+		GzTextureIndex uvMid = { vertexSorter.getUVMid()[0], vertexSorter.getUVMid()[1] };
+		GzTextureIndex uvBot = { vertexSorter.getUVBot()[0], vertexSorter.getUVBot()[1] };
+
+		// generate vertex color for flat shading
+		ColorGenerator colorGenerator(numlights, lights, ambientlight, Ka, Kd, Ks, spec, norm0);
+		colorGenerator.Generate();
+		colorGenerator.ToGzColor(this->flatcolor);
+
+		// read color from uv map
+		GzColor colorTop = { 0.0f, 0.0f, 0.0f };
+		GzColor colorMid = { 0.0f, 0.0f, 0.0f };
+		GzColor colorBot = { 0.0f, 0.0f, 0.0f };
+
+		// generate vertex color for Gouraud shading
+		GzColor Kt = { 1.0f, 1.0f, 1.0f };
+		colorGenerator.setK(Kt, Kt, Kt);
+		colorGenerator.setCurrentNorm(normTop);
+		colorGenerator.Generate();
+		colorGenerator.ToGzColor(colorTop);
+		colorGenerator.setCurrentNorm(normMid);
+		colorGenerator.Generate();
+		colorGenerator.ToGzColor(colorMid);
+		colorGenerator.setCurrentNorm(normBot);
+		colorGenerator.Generate();
+		colorGenerator.ToGzColor(colorBot);
+
+		// transform uv value from image space to perspective space for phong shading
+		/*
+		Description:
+		This function is used to transform parameter in perspective space to image space;
+		Input:
+		@ float scaledZ: scaled Z value in perspective space;
+		@ float p: parameter p in perspective space;
+		Output:
+		@ auto returnValue: a parameter in image space;
+		*/
+		auto image2perspective = [](float scaledZ, float p) mutable {
+			float zPrime = scaledZ / (MAXINT - scaledZ);
+			return p / (zPrime + 1);
+		};
+		uvTop[0] = image2perspective(verTop[2], uvTop[0]);
+		uvTop[1] = image2perspective(verTop[2], uvTop[1]);
+		uvMid[0] = image2perspective(verMid[2], uvMid[0]);
+		uvMid[1] = image2perspective(verMid[2], uvMid[1]);
+		uvBot[0] = image2perspective(verBot[2], uvBot[0]);
+		uvBot[1] = image2perspective(verBot[2], uvBot[1]);
+
+
+		// find L/R relationship to determine clockwise edges
+		// clockwise edges could be either top-bot-mid or top-mid-bot
+		// initialize DDAs for top-bot edge and top-mid edge
+		DDA ddaTopBot(verTop, verBot, normTop, normBot, colorTop, colorBot, uvTop, uvBot, false);
+		DDA ddaTopMid(verTop, verMid, normTop, normMid, colorTop, colorMid, uvTop, uvMid, true);
+		DDA ddaMidBot(verMid, verBot, normMid, normBot, colorMid, colorBot, uvMid, uvBot, true);
+
+		// move current point of the long edge to where the short edge ends to decide whether the short edge is on the right or left;
+		float xShortEdge = verMid[0];
+		float xLongEdge = ddaTopBot.MoveY(verMid[1] - verTop[1])[0];
+
+		// move current point of the long edge back for rendering
+		ddaTopBot.MoveReset();
+		ddaTopBot.MoveToNearestPixelLocation();
+
+		// if x < verMid[0], the short edge is on the left, or its on the right;
+		scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false, bufferIndex);
+		scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false, bufferIndex);
+
+	}
+
+	for (int i = 0; i < xres; i++) {
+		for (int j = 0; j < yres; j++) {
+			float r(0), g(0), b(0), z(0);
+			for (int bufferIndex = 0; bufferIndex < 6; bufferIndex++) {
+				r += pixelBuffers[bufferIndex][ARRAY(i, j)].red * AAFilter[bufferIndex][2];
+				g += pixelBuffers[bufferIndex][ARRAY(i, j)].green * AAFilter[bufferIndex][2];
+				b += pixelBuffers[bufferIndex][ARRAY(i, j)].blue * AAFilter[bufferIndex][2];
+				z += pixelBuffers[bufferIndex][ARRAY(i, j)].z * AAFilter[bufferIndex][2];
+			}
+			GzPut(i, j, r, g, b, 0, z);
+		}
+	}
 
 	return GZ_SUCCESS;
 }

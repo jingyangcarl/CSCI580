@@ -85,6 +85,9 @@
     <ClInclude Include="CS580HWView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gz.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="MainFrm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -116,9 +119,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rendVertexSorter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Gz.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

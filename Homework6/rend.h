@@ -23,6 +23,7 @@ public:
 	unsigned short	xres;
 	unsigned short	yres;
 	GzPixel		*pixelbuffer;		/* frame buffer array */
+	GzPixel* pixelBuffers[6];
 	char* framebuffer;
 
 	GzCamera		m_camera;
@@ -39,6 +40,7 @@ public:
 	float		    spec;		/* specular power */
 	GzTexture		tex_fun;    /* tex_fun(float u, float v, GzColor color) */
 
+
   	// Constructors
 	GzRender(int xRes, int yRes);
 	~GzRender();
@@ -49,6 +51,7 @@ public:
 	int GzDefault();
 	int GzBeginRender();
 	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z);
+	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z, int bufferIndex);
 	int GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth	*z);
 
 	int GzFlushDisplay2File(FILE* outfile);

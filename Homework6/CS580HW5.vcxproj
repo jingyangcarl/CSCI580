@@ -162,7 +162,7 @@
     <ClInclude Include="CS580HW.h" />
     <ClInclude Include="CS580HWDoc.h" />
     <ClInclude Include="CS580HWView.h" />
-    <ClInclude Include="Gz.h" />
+    <ClInclude Include="gz.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="rend.h" />
     <ClInclude Include="rendColorGenerator.h" />

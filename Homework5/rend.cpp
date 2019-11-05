@@ -830,6 +830,19 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				colorGenerator.Generate();
 				colorGenerator.ToGzColor(this->flatcolor);
 			}
+
+			// clip color
+			flatcolor[0] = flatcolor[0] > 1 ? 1 : (flatcolor[0] < 0 ? 0 : flatcolor[0]);
+			flatcolor[1] = flatcolor[1] > 1 ? 1 : (flatcolor[1] < 0 ? 0 : flatcolor[1]);
+			flatcolor[2] = flatcolor[2] > 1 ? 1 : (flatcolor[2] < 0 ? 0 : flatcolor[2]);
+
+			// project normalized color to 0-4096
+			float r = ctoi(flatcolor[0]);
+			float g = ctoi(flatcolor[1]);
+			float b = ctoi(flatcolor[2]);
+
+			// put pixel
+			GzPut(i, j, r, g, b, 0, z);
 		};
 
 		// from the start line to the end line (along y)
@@ -853,20 +866,6 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 					Render(i, j, shortEdge, longEdge);
 				}
 			}
-
-			// clip color
-			flatcolor[0] = flatcolor[0] > 1 ? 1 : (flatcolor[0] < 0 ? 0 : flatcolor[0]);
-			flatcolor[1] = flatcolor[1] > 1 ? 1 : (flatcolor[1] < 0 ? 0 : flatcolor[1]);
-			flatcolor[2] = flatcolor[2] > 1 ? 1 : (flatcolor[2] < 0 ? 0 : flatcolor[2]);
-
-			// project normalized color to 0-4096
-			float r = ctoi(flatcolor[0]);
-			float g = ctoi(flatcolor[1]);
-			float b = ctoi(flatcolor[2]);
-
-			// put pixel
-			GzPut(i, j, r, g, b, 0, z);
-
 			// move the current points to the next pixel line (scan line by scan line)
 			shortEdge.MoveDownward();
 			longEdge.MoveDownward();
