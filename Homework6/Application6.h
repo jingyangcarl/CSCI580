@@ -1,4 +1,4 @@
-// Application4.h: interface for the Application4 class.
+// Application6.h: interface for the Application6 class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -11,11 +11,11 @@
 
 #include "Application.h"
 
-class Application5 : public Application  
+class Application6 : public Application  
 {
 public:
-	Application5();
-	virtual ~Application5();
+	Application6();
+	virtual ~Application6();
 	
 	int	Initialize();
 	virtual int Render(); 

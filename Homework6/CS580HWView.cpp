@@ -11,7 +11,7 @@
 #include "ScaleDlg.h"
 
 #include "rend.h"
-#include "Application5.h"
+#include "Application6.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -102,7 +102,7 @@ void CCS580HWView::OnRender()
 
 	// Application 5
 	if(m_pApplication != NULL)
-		((Application5 *)m_pApplication)->Render();
+		((Application6 *)m_pApplication)->Render();
 	else 
 		AfxMessageBox("Application was not allocated\n");
 
@@ -176,11 +176,11 @@ void CCS580HWView::OnInitialUpdate()
 	// Assign Application 5
 	if(m_pApplication == NULL)
 	{
-		m_pApplication = new Application5;
+		m_pApplication = new Application6;
 	}
 	
 	// Initialize and begin renderer
-	((Application5 *)m_pApplication)->Initialize();
+	((Application6 *)m_pApplication)->Initialize();
 }
 
 // Callback function for rotation  

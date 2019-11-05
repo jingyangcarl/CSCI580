@@ -1,4 +1,4 @@
-// Application5.cpp: implementation of the Application5 class.
+// Application6.cpp: implementation of the Application6 class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -8,7 +8,7 @@
 
 #include "stdafx.h"
 #include "CS580HW.h"
-#include "Application5.h"
+#include "Application6.h"
 #include "Gz.h"
 #include "rend.h"
 
@@ -33,17 +33,17 @@ void shade(GzCoord norm, GzCoord color);
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-Application5::Application5()
+Application6::Application6()
 {
 
 }
 
-Application5::~Application5()
+Application6::~Application6()
 {
 	Clean();
 }
 
-int Application5::Initialize()
+int Application6::Initialize()
 {
 	GzCamera	camera;  
 	int		    xRes, yRes;	/* display parameters */ 
@@ -209,7 +209,7 @@ GzMatrix	rotateY =
 		return(GZ_SUCCESS); 
 }
 
-int Application5::Render() 
+int Application6::Render() 
 {
 	GzToken		nameListTriangle[3]; 	/* vertex attribute names */
 	GzPointer	valueListTriangle[3]; 	/* vertex attribute pointers */
@@ -299,7 +299,7 @@ int Application5::Render()
 		return(GZ_SUCCESS); 
 }
 
-int Application5::Clean()
+int Application6::Clean()
 {
 	/* 
 	 * Clean up and exit 
