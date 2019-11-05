@@ -135,6 +135,9 @@ GzRender::GzRender(int xRes, int yRes)
 	this->yres = yRes;
 	this->framebuffer = new char[3 * sizeof(char) * xRes * yRes];
 	this->pixelbuffer = new GzPixel[xRes * yRes];
+	for (int i = 0; i < 6; i++) {
+		this->pixelBuffers[i] = new GzPixel[xRes * yRes];
+	}
 
 /* HW 3.6
 - setup Xsp and anything only done once 
@@ -192,6 +195,19 @@ int GzRender::GzDefault()
 			pixelbuffer[ARRAY(i, j)].z = MAXINT32;
 		}
 	}
+
+	for (int i = 0; i < 6; i++) {
+		for (int x = 0; x < xres; x++) {
+			for (int y = 0; y < yres; y++) {
+				pixelBuffers[i][ARRAY(x, y)].red = 4095;
+				pixelBuffers[i][ARRAY(x, y)].green = 4095;
+				pixelBuffers[i][ARRAY(x, y)].blue = 4095;
+				pixelBuffers[i][ARRAY(x, y)].alpha = 1;
+				pixelBuffers[i][ARRAY(x, y)].z = MAXINT32;
+			}
+		}
+	}
+
 	return GZ_SUCCESS;
 }
 
@@ -385,7 +401,9 @@ int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, G
 	return GZ_SUCCESS;
 }
 
-int GzRender::GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z, int bufferIndex) {
+int GzRender::GzPut(int i, int j, int bufferIndex, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z) {
+	if (bufferIndex < 0 || bufferIndex > 6) return GZ_FAILURE;
+
 	if (i >= 0 && i < xres && j >= 0 && j < yres) {
 		if (z <= pixelBuffers[bufferIndex][ARRAY(i, j)].z) {
 			pixelBuffers[bufferIndex][ARRAY(i, j)].red = r < 4095 ? r : 4095;
@@ -653,172 +671,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 -- invoke triangle rasterizer  
 */
 
-
-/*
-Description:
-This function is a lambda function defined to render pixels scan line by scan line from the short edge side to long edge side of a triangle by a top-down order;
-Input:
-@ DDA& shortEdge: the shorter edge of a triangle;
-@ DDA& longEdge: the longest edge of a triangle;
-@ bool isShortEdgeOnRight: if the short edge is on the right of long edge;
-Output:
-@ auto returnValue: an auto returnValue;
-*/
-	auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, bool isShortEdgeOnRight, int bufferIndex) mutable {
-		/*
-		Description:
-		This function is a lambda function defined to calculate color, normal and depth at given location;
-		Input:
-		@ int i: index i in the rendered image;
-		@ int j: index j in the rendered image;
-		@ DDA& shortEdge: the shorter edge of a triangle;
-		@ DDA& longEdge: the longest edge of a triangle;
-		@ int count: the counter used to accelerate
-		Output:
-		@ auto returnValue: an auto returnValue;
-		*/
-		auto Render = [this](const int i, const int j, DDA& shortEdge, DDA& longEdge, int bufferIndex) mutable {
-
-			float deltaX = i - shortEdge.getCurrentVer()[0];
-
-			// calculate z
-			float slopeZToX = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-			GzDepth z = slopeZToX * deltaX + shortEdge.getCurrentVer()[2];
-
-			/*
-			Description:
-			This function is used to transform scaled parameter in image space back to perspective space;
-			Input£º
-			@ float scaledZ: scaled Z value in perspective space;
-			@ float scaledP: scaled parameter in image space;
-			Output:
-			@ auto returnValue: a parameter in perspective space;
-			*/
-			auto perspective2image = [](float scaledZ, float scaledP) {
-				float zPrime = scaledZ / (MAXINT - scaledZ);
-				return scaledP * (zPrime + 1);
-			};
-
-			// calculate r, g, b
-			if (this->interp_mode == GZ_FLAT) {
-				// flat shading
-
-			}
-			else if (this->interp_mode == GZ_COLOR) {
-				// Gouraud shading
-				float slopeRToX = (shortEdge.getCurrentColor()[0] - longEdge.getCurrentColor()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float slopeGToX = (shortEdge.getCurrentColor()[1] - longEdge.getCurrentColor()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float slopeBToX = (shortEdge.getCurrentColor()[2] - longEdge.getCurrentColor()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float r = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
-				float g = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
-				float b = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
-
-				float slopeUtoX = (shortEdge.getCurrentUV()[0] - longEdge.getCurrentUV()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float slopeVtoX = (shortEdge.getCurrentUV()[1] - longEdge.getCurrentUV()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float currentU = slopeUtoX * deltaX + shortEdge.getCurrentUV()[0];
-				float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
-
-				// interpolate uv back to image 
-				currentU = perspective2image(z, currentU);
-				currentV = perspective2image(z, currentV);
-				GzColor K = { 0.0f, 0.0f, 0.0f };
-				this->tex_fun(currentU, currentV, K);
-
-				this->flatcolor[0] = r * K[0];
-				this->flatcolor[1] = g * K[1];
-				this->flatcolor[2] = b * K[2];
-			}
-			else if (this->interp_mode == GZ_NORMALS) {
-				// Phong shading
-				float slopeNormXToX = (shortEdge.getCurrentNorm()[0] - longEdge.getCurrentNorm()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float slopeNormYToX = (shortEdge.getCurrentNorm()[1] - longEdge.getCurrentNorm()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float slopeNormZToX = (shortEdge.getCurrentNorm()[2] - longEdge.getCurrentNorm()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float currentNormX = slopeNormXToX * deltaX + shortEdge.getCurrentNorm()[0];
-				float currentNormY = slopeNormYToX * deltaX + shortEdge.getCurrentNorm()[1];
-				float currentNormZ = slopeNormZToX * deltaX + shortEdge.getCurrentNorm()[2];
-
-				float slopeUtoX = (shortEdge.getCurrentUV()[0] - longEdge.getCurrentUV()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float slopeVtoX = (shortEdge.getCurrentUV()[1] - longEdge.getCurrentUV()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
-				float currentU = slopeUtoX * deltaX + shortEdge.getCurrentUV()[0];
-				float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
-
-				// interpolate uv back to image 
-				currentU = perspective2image(z, currentU);
-				currentV = perspective2image(z, currentV);
-
-				GzCoord currentNormal = { currentNormX, currentNormY, currentNormZ };
-				GzColor K = { 0.0f, 0.0f, 0.0f };
-				this->tex_fun(currentU, currentV, K);
-				ColorGenerator colorGenerator(numlights, lights, ambientlight, K, K, Ks, spec, currentNormal);
-				colorGenerator.Generate();
-				colorGenerator.ToGzColor(this->flatcolor);
-			}
-
-			// clip color
-			flatcolor[0] = flatcolor[0] > 1 ? 1 : (flatcolor[0] < 0 ? 0 : flatcolor[0]);
-			flatcolor[1] = flatcolor[1] > 1 ? 1 : (flatcolor[1] < 0 ? 0 : flatcolor[1]);
-			flatcolor[2] = flatcolor[2] > 1 ? 1 : (flatcolor[2] < 0 ? 0 : flatcolor[2]);
-
-			// project normalized color to 0-4096
-			float r = ctoi(flatcolor[0]);
-			float g = ctoi(flatcolor[1]);
-			float b = ctoi(flatcolor[2]);
-
-			// put pixel
-			GzPut(i, j, r, g, b, 0, z, bufferIndex);
-		};
-
-		// from the start line to the end line (along y)
-		for (int j = shortEdge.getCurrentVer()[1]; j >= ceil(shortEdge.getEndVer()[1]); j--) {
-			if (j < 0 || j > this->yres) {
-				// skip the line and move current points down to the next pixel line;
-				shortEdge.MoveDownward();
-				longEdge.MoveDownward();
-				continue;
-			}
-			// from the start pixel to the end pixel (along x)
-			if (isShortEdgeOnRight) {
-				// short edge is on the right of the long edge
-				for (int i = floor(shortEdge.getCurrentVer()[0]); i >= longEdge.getCurrentVer()[0]; i--) {
-					Render(i, j, shortEdge, longEdge, bufferIndex);
-				}
-			}
-			else {
-				// short edge is on the left of the long edge
-				for (int i = ceil(shortEdge.getCurrentVer()[0]); i <= longEdge.getCurrentVer()[0]; i++) {
-					Render(i, j, shortEdge, longEdge, bufferIndex);
-				}
-			}
-			// move the current points to the next pixel line (scan line by scan line)
-			shortEdge.MoveDownward();
-			longEdge.MoveDownward();
-		}
-		return GZ_SUCCESS;
-	};
-
-
-	// define AAshift
-	float AAFilter[6][3]{
-			-0.52, 0.38, 0.128,		0.41, 0.56, 0.119,		0.27, 0.08, 0.294,
-			-0.17, -0.29, 0.249,	0.58, -0.55, 0.104,		-0.31, -0.71, 0.106
-	};
-
-	// init pixel buffers
 	for (int bufferIndex = 0; bufferIndex < 6; bufferIndex++) {
-		pixelBuffers[bufferIndex] = new GzPixel[xres * yres];
-		for (int x = 0; x < xres; x++) {
-			for (int y = 0; y < yres; y++) {
-				pixelBuffers[bufferIndex][ARRAY(x, y)].red = 4095;
-				pixelBuffers[bufferIndex][ARRAY(x, y)].green = 4095;
-				pixelBuffers[bufferIndex][ARRAY(x, y)].blue = 4095;
-				pixelBuffers[bufferIndex][ARRAY(x, y)].alpha = 1;
-				pixelBuffers[bufferIndex][ARRAY(x, y)].z = MAXINT32;
-			}
-		}
-	}
-
-	for (int bufferIndex = 0; bufferIndex < 6; bufferIndex++) {
-
 		// prepare ver0, ver1, and ver2;
 		GzCoord* verCoord = (GzCoord*)(valueList[0]);
 		GzCoord ver0 = { verCoord[0][0], verCoord[0][1], verCoord[0][2] };
@@ -914,6 +767,147 @@ Output:
 		uvBot[0] = image2perspective(verBot[2], uvBot[0]);
 		uvBot[1] = image2perspective(verBot[2], uvBot[1]);
 
+		/*
+		Description:
+		This function is a lambda function defined to render pixels scan line by scan line from the short edge side to long edge side of a triangle by a top-down order;
+		Input:
+		@ DDA& shortEdge: the shorter edge of a triangle;
+		@ DDA& longEdge: the longest edge of a triangle;
+		@ bool isShortEdgeOnRight: if the short edge is on the right of long edge;
+		Output:
+		@ auto returnValue: an auto returnValue;
+		*/
+		auto scanLineRender = [this](DDA& shortEdge, DDA& longEdge, int bufferIndex, bool isShortEdgeOnRight) mutable {
+			/*
+			Description:
+			This function is a lambda function defined to calculate color, normal and depth at given location;
+			Input:
+			@ int i: index i in the rendered image;
+			@ int j: index j in the rendered image;
+			@ DDA& shortEdge: the shorter edge of a triangle;
+			@ DDA& longEdge: the longest edge of a triangle;
+			@ int count: the counter used to accelerate
+			Output:
+			@ auto returnValue: an auto returnValue;
+			*/
+			auto Render = [this](const float i, const float j, int bufferIndex, DDA& shortEdge, DDA& longEdge) mutable {
+
+				float deltaX = i - shortEdge.getCurrentVer()[0];
+
+				// calculate z
+				float slopeZToX = (shortEdge.getCurrentVer()[2] - longEdge.getCurrentVer()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+				GzDepth z = slopeZToX * deltaX + shortEdge.getCurrentVer()[2];
+
+				/*
+				Description:
+				This function is used to transform scaled parameter in image space back to perspective space;
+				Input£º
+				@ float scaledZ: scaled Z value in perspective space;
+				@ float scaledP: scaled parameter in image space;
+				Output:
+				@ auto returnValue: a parameter in perspective space;
+				*/
+				auto perspective2image = [](float scaledZ, float scaledP) {
+					float zPrime = scaledZ / (MAXINT - scaledZ);
+					return scaledP * (zPrime + 1);
+				};
+
+				// calculate r, g, b
+				if (this->interp_mode == GZ_FLAT) {
+					// flat shading
+
+				}
+				else if (this->interp_mode == GZ_COLOR) {
+					// Gouraud shading
+					float slopeRToX = (shortEdge.getCurrentColor()[0] - longEdge.getCurrentColor()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float slopeGToX = (shortEdge.getCurrentColor()[1] - longEdge.getCurrentColor()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float slopeBToX = (shortEdge.getCurrentColor()[2] - longEdge.getCurrentColor()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float r = slopeRToX * deltaX + shortEdge.getCurrentColor()[0];
+					float g = slopeGToX * deltaX + shortEdge.getCurrentColor()[1];
+					float b = slopeBToX * deltaX + shortEdge.getCurrentColor()[2];
+
+					float slopeUtoX = (shortEdge.getCurrentUV()[0] - longEdge.getCurrentUV()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float slopeVtoX = (shortEdge.getCurrentUV()[1] - longEdge.getCurrentUV()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float currentU = slopeUtoX * deltaX + shortEdge.getCurrentUV()[0];
+					float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
+
+					// interpolate uv back to image 
+					currentU = perspective2image(z, currentU);
+					currentV = perspective2image(z, currentV);
+					GzColor K = { 0.0f, 0.0f, 0.0f };
+					this->tex_fun(currentU, currentV, K);
+
+					this->flatcolor[0] = r * K[0];
+					this->flatcolor[1] = g * K[1];
+					this->flatcolor[2] = b * K[2];
+				}
+				else if (this->interp_mode == GZ_NORMALS) {
+					// Phong shading
+					float slopeNormXToX = (shortEdge.getCurrentNorm()[0] - longEdge.getCurrentNorm()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float slopeNormYToX = (shortEdge.getCurrentNorm()[1] - longEdge.getCurrentNorm()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float slopeNormZToX = (shortEdge.getCurrentNorm()[2] - longEdge.getCurrentNorm()[2]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float currentNormX = slopeNormXToX * deltaX + shortEdge.getCurrentNorm()[0];
+					float currentNormY = slopeNormYToX * deltaX + shortEdge.getCurrentNorm()[1];
+					float currentNormZ = slopeNormZToX * deltaX + shortEdge.getCurrentNorm()[2];
+
+					float slopeUtoX = (shortEdge.getCurrentUV()[0] - longEdge.getCurrentUV()[0]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float slopeVtoX = (shortEdge.getCurrentUV()[1] - longEdge.getCurrentUV()[1]) / (shortEdge.getCurrentVer()[0] - longEdge.getCurrentVer()[0]);
+					float currentU = slopeUtoX * deltaX + shortEdge.getCurrentUV()[0];
+					float currentV = slopeVtoX * deltaX + shortEdge.getCurrentUV()[1];
+
+					// interpolate uv back to image 
+					currentU = perspective2image(z, currentU);
+					currentV = perspective2image(z, currentV);
+
+					GzCoord currentNormal = { currentNormX, currentNormY, currentNormZ };
+					GzColor K = { 0.0f, 0.0f, 0.0f };
+					this->tex_fun(currentU, currentV, K);
+					ColorGenerator colorGenerator(numlights, lights, ambientlight, K, K, Ks, spec, currentNormal);
+					colorGenerator.Generate();
+					colorGenerator.ToGzColor(this->flatcolor);
+				}
+
+				// clip color
+				flatcolor[0] = flatcolor[0] > 1 ? 1 : (flatcolor[0] < 0 ? 0 : flatcolor[0]);
+				flatcolor[1] = flatcolor[1] > 1 ? 1 : (flatcolor[1] < 0 ? 0 : flatcolor[1]);
+				flatcolor[2] = flatcolor[2] > 1 ? 1 : (flatcolor[2] < 0 ? 0 : flatcolor[2]);
+
+				// project normalized color to 0-4096
+				float r = ctoi(flatcolor[0]);
+				float g = ctoi(flatcolor[1]);
+				float b = ctoi(flatcolor[2]);
+
+				// put pixel
+				GzPut(i, j, bufferIndex, r, g, b, 0, z);
+			};
+
+			// from the start line to the end line (along y)
+			for (int j = shortEdge.getCurrentVer()[1]; j >= ceil(shortEdge.getEndVer()[1]); j--) {
+				if (j < 0 || j > this->yres) {
+					// skip the line and move current points down to the next pixel line;
+					shortEdge.MoveDownward();
+					longEdge.MoveDownward();
+					continue;
+				}
+				// from the start pixel to the end pixel (along x)
+				if (isShortEdgeOnRight) {
+					// short edge is on the right of the long edge
+					for (int i = floor(shortEdge.getCurrentVer()[0]); i >= longEdge.getCurrentVer()[0]; i--) {
+						Render(i, j, bufferIndex, shortEdge, longEdge);
+					}
+				}
+				else {
+					// short edge is on the left of the long edge
+					for (int i = ceil(shortEdge.getCurrentVer()[0]); i <= longEdge.getCurrentVer()[0]; i++) {
+						Render(i, j, bufferIndex, shortEdge, longEdge);
+					}
+				}
+				// move the current points to the next pixel line (scan line by scan line)
+				shortEdge.MoveDownward();
+				longEdge.MoveDownward();
+			}
+			return GZ_SUCCESS;
+		};
 
 		// find L/R relationship to determine clockwise edges
 		// clockwise edges could be either top-bot-mid or top-mid-bot
@@ -931,21 +925,13 @@ Output:
 		ddaTopBot.MoveToNearestPixelLocation();
 
 		// if x < verMid[0], the short edge is on the left, or its on the right;
-		scanLineRender(ddaTopMid, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false, bufferIndex);
-		scanLineRender(ddaMidBot, ddaTopBot, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false, bufferIndex);
-
+		scanLineRender(ddaTopMid, ddaTopBot, bufferIndex, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
+		scanLineRender(ddaMidBot, ddaTopBot, bufferIndex, xLongEdge < xShortEdge ? true : xLongEdge > xShortEdge ? false : false);
 	}
 
 	for (int i = 0; i < xres; i++) {
 		for (int j = 0; j < yres; j++) {
-			float r(0), g(0), b(0), z(0);
-			for (int bufferIndex = 0; bufferIndex < 6; bufferIndex++) {
-				r += pixelBuffers[bufferIndex][ARRAY(i, j)].red * AAFilter[bufferIndex][2];
-				g += pixelBuffers[bufferIndex][ARRAY(i, j)].green * AAFilter[bufferIndex][2];
-				b += pixelBuffers[bufferIndex][ARRAY(i, j)].blue * AAFilter[bufferIndex][2];
-				z += pixelBuffers[bufferIndex][ARRAY(i, j)].z * AAFilter[bufferIndex][2];
-			}
-			GzPut(i, j, r, g, b, 0, z);
+			pixelbuffer[ARRAY(i, j)] = pixelBuffers[5][ARRAY(i, j)];
 		}
 	}
 

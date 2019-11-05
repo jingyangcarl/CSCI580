@@ -40,7 +40,6 @@ public:
 	float		    spec;		/* specular power */
 	GzTexture		tex_fun;    /* tex_fun(float u, float v, GzColor color) */
 
-
   	// Constructors
 	GzRender(int xRes, int yRes);
 	~GzRender();
@@ -51,7 +50,7 @@ public:
 	int GzDefault();
 	int GzBeginRender();
 	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z);
-	int GzPut(int i, int j, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z, int bufferIndex);
+	int GzPut(int i, int j, int bufferIndex, GzIntensity r, GzIntensity g, GzIntensity b, GzIntensity a, GzDepth z);
 	int GzGet(int i, int j, GzIntensity *r, GzIntensity *g, GzIntensity *b, GzIntensity *a, GzDepth	*z);
 
 	int GzFlushDisplay2File(FILE* outfile);
