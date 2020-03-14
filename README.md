@@ -1,1 +1,2 @@
 # CSCI580
+I implemented a simple OpenGL renderer from scratch. I started with creating pixel buffers and frame buffers and walked through scan line rendering implementation, hidden surfaces & culling implementation using z buffers, transformations from model space to world space, camera space, perspective space, and finally screen space, shading implementation, perspective correction, and anti-aliasing.
